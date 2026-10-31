@@ -1,0 +1,35 @@
+{
+  "name": "pamella-academy-v8",
+  "private": true,
+  "version": "0.8.0",
+  "engines": {
+    "node": ">=20.9.0"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "typecheck": "tsc --noEmit",
+    "verify": "node scripts/verify-project.mjs",
+    "env:check": "node --env-file=.env.local scripts/check-env.mjs",
+    "bootstrap:admin": "node --env-file=.env.local scripts/bootstrap-admin.mjs",
+    "seed:starter": "node --env-file=.env.local scripts/seed-starter.mjs",
+    "preverify": "node scripts/unpack-source.mjs",
+    "pretypecheck": "node scripts/unpack-source.mjs",
+    "prebuild": "node scripts/unpack-source.mjs"
+  },
+  "dependencies": {
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.118.0",
+    "lucide-react": "1.64.0",
+    "next": "16.4.3",
+    "react": "19.3.1",
+    "react-dom": "19.3.1"
+  },
+  "devDependencies": {
+    "@types/node": "latest",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "typescript": "5.8.3"
+  }
+}
