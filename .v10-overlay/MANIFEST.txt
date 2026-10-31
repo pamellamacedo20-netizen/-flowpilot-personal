@@ -1,0 +1,4 @@
+Pamella Academy V10 overlay
+Expected local overlay SHA-256: 196869d5e57ae3ee9209359ae997c898c37699e4e21a9c9ec0dc6c75be3a7124
+Base: pamella-academy-v9 commit 272e65ac136ea74784ca22feee68ee0d6278bfae
+Apply after .source-payload + .v9-overlay + .v9-live-patch.
