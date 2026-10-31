@@ -1,9 +1,8 @@
 Pamella Academy V10 verified overlay
 Encoding: base64 chunks
-Chunks: 6
+Read order: chunk-00, chunk-01, chunk-02a, chunk-02b, chunk-03, chunk-04, chunk-05
 Expected concatenated base64 chars: 45320
 Expected decoded tar.gz bytes: 33990
 Expected tar.gz SHA-256: 704f1bbc0d6e6edf8e5398e91202b8381fc8d5f93f760fb1bd9a84469222f3b6
 Base: pamella-academy-v9 commit 272e65ac136ea74784ca22feee68ee0d6278bfae
 Apply after .source-payload + .v9-overlay + .v9-live-patch.
-Ignore .v10-overlay/source.tar.gz from the earlier incomplete commit; use chunk-00 through chunk-05 only.
