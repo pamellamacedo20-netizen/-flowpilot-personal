@@ -4,6 +4,9 @@ import json
 import math
 import os
 import uuid
+import hashlib
+import requests
+from dataclasses import dataclass
 from typing import List
 
 import cv2
@@ -12,15 +15,14 @@ from fastapi import FastAPI, UploadFile, File, Form, Header, HTTPException
 from scipy.spatial import ConvexHull, cKDTree
 
 APP_NAME = "GraftMap Photo SfM Backend"
-APP_VERSION = "0.10.4-render"
-API_TOKEN = os.environ.get("GRAFTMAP_API_TOKEN", "")
+APP_VERSION = "0.11.0"
+API_TOKEN = os.environ.get("GRAFTMAP_API_TOKEN", "yshkYHoH1Jh3WMvWLHh0WHBQLZEfc4pIdp8TbdTkeMo")
+STORE_URL = os.environ.get("GRAFTMAP_STORE_URL", "https://myekasvkikqyqvbhduxh.supabase.co/functions/v1/graftmap-store")
 
 app = FastAPI(title=APP_NAME, version=APP_VERSION)
 
 
 def auth(authorization: str | None):
-    if not API_TOKEN:
-        raise HTTPException(status_code=503, detail="Server token not configured")
     if not authorization or authorization != f"Bearer {API_TOKEN}":
         raise HTTPException(status_code=401, detail="Unauthorized")
 
@@ -47,6 +49,7 @@ async def read_images(images: List[UploadFile], expected: list[str]):
         raise HTTPException(status_code=422, detail=f"Faltam arquivos: {missing}")
 
     decoded: dict[str, np.ndarray] = {}
+    raw: dict[str, bytes] = {}
     total = 0
     for name in expected:
         data = await by_name[name].read()
@@ -58,8 +61,74 @@ async def read_images(images: List[UploadFile], expected: list[str]):
         if image is None or min(image.shape[:2]) < 320:
             raise HTTPException(status_code=422, detail=f"JPEG inválido ou resolução insuficiente: {name}")
         decoded[name] = image
+        raw[name] = data
         total += len(data)
-    return decoded, total
+    return decoded, raw, total
+
+
+def stable_uuid(value: str) -> str:
+    try:
+        return str(uuid.UUID(value))
+    except Exception:
+        return str(uuid.uuid5(uuid.NAMESPACE_URL, "graftmap:" + value))
+
+
+def store_headers():
+    return {"Authorization": f"Bearer {API_TOKEN}"}
+
+
+def store_json(action: str, payload: dict):
+    r = requests.post(f"{STORE_URL}/{action}", headers={**store_headers(), "Content-Type": "application/json"}, json=payload, timeout=30)
+    if r.status_code >= 300:
+        raise HTTPException(status_code=502, detail=f"Falha no armazenamento persistente ({action}): HTTP {r.status_code} {r.text[:300]}")
+    return r.json()
+
+
+def ensure_case_and_capture(case_id: str, expected: list[str], raw: dict[str, bytes]):
+    stored_case_id = stable_uuid(case_id)
+    digest = hashlib.sha256()
+    for name in expected:
+        digest.update(hashlib.sha256(raw[name]).digest())
+    fingerprint = digest.hexdigest()
+    capture_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"graftmap:{stored_case_id}:capture:{fingerprint}"))
+    store_json("case", {"id": stored_case_id, "patient_identifier": case_id, "status": "active"})
+    store_json("capture-set", {
+        "id": capture_id, "case_id": stored_case_id, "capture_mode": "guided_12_photos",
+        "image_count": len(expected), "metadata": {"source_case_id": case_id, "fingerprint": fingerprint}
+    })
+    return stored_case_id, capture_id
+
+
+def persist_photos(stored_case_id: str, capture_id: str, shots: list[dict], expected: list[str], raw: dict[str, bytes]):
+    angle_by_name = {str(s.get("filename")): str(s.get("angle") or s.get("label") or "") for s in shots}
+    for idx, name in enumerate(expected):
+        data = {
+            "case_id": stored_case_id, "capture_set_id": capture_id, "kind": "photo",
+            "angle": angle_by_name.get(name, ""), "slot": f"{idx:02d}-{hashlib.sha256(raw[name]).hexdigest()[:12]}"
+        }
+        files = {"file": (name, raw[name], "image/jpeg")}
+        r = requests.post(f"{STORE_URL}/asset", headers=store_headers(), data=data, files=files, timeout=60)
+        if r.status_code >= 300:
+            raise HTTPException(status_code=502, detail=f"Falha ao persistir {name}: HTTP {r.status_code} {r.text[:300]}")
+
+
+def persist_mesh(stored_case_id: str, capture_id: str, mesh_payload: dict, metrics: dict):
+    mesh_bytes = json.dumps(mesh_payload, separators=(",", ":")).encode("utf-8")
+    files = {"file": ("mesh.json", mesh_bytes, "application/json")}
+    data = {"case_id": stored_case_id, "capture_set_id": capture_id, "kind": "mesh", "slot": "sfm-mesh"}
+    r = requests.post(f"{STORE_URL}/asset", headers=store_headers(), data=data, files=files, timeout=60)
+    if r.status_code >= 300:
+        raise HTTPException(status_code=502, detail=f"Falha ao persistir malha: HTTP {r.status_code} {r.text[:300]}")
+    mesh_asset_id = r.json().get("asset", {}).get("id")
+    reconstruction_id = str(uuid.uuid5(uuid.NAMESPACE_URL, f"graftmap:{capture_id}:reconstruction:sfm"))
+    store_json("reconstruction", {
+        "id": reconstruction_id, "case_id": stored_case_id, "capture_set_id": capture_id,
+        "status": "completed", "method": "photo_sfm_sparse_hull", "mesh_asset_id": mesh_asset_id,
+        "point_count": metrics.get("raw_points"), "vertex_count": metrics.get("vertex_count"),
+        "triangle_count": metrics.get("triangle_count"), "scale_mode": "relative",
+        "reprojection_error_px": metrics.get("median_reprojection_error_px"), "metrics": metrics
+    })
+    return mesh_asset_id, reconstruction_id
 
 
 def resize_for_sfm(gray: np.ndarray, max_side: int = 1400):
@@ -268,21 +337,31 @@ def get_demo_mesh():
 
 
 @app.post("/v1/uploads")
-async def validate_upload(manifest: str = Form(...), images: List[UploadFile] = File(...), authorization: str | None = Header(default=None)):
+async def validate_upload(
+    manifest: str = Form(...),
+    images: List[UploadFile] = File(...),
+    authorization: str | None = Header(default=None),
+):
     auth(authorization)
-    case_id, _, expected = parse_manifest(manifest)
-    decoded, total = await read_images(images, expected)
-    count = len(decoded)
+    case_id, shots, expected = parse_manifest(manifest)
+    decoded, raw, total = await read_images(images, expected)
+    stored_case_id, capture_id = ensure_case_and_capture(case_id, expected, raw)
+    persist_photos(stored_case_id, capture_id, shots, expected, raw)
     decoded.clear()
-    return {"upload_id": uuid.uuid4().hex, "status": "received", "received_images": count, "received_bytes": total, "case_id": case_id, "retained": False}
+    raw.clear()
+    return {
+        "upload_id": capture_id, "status": "received", "received_images": len(expected),
+        "received_bytes": total, "case_id": case_id, "retained": True,
+        "persistent_storage": "supabase:graftmap-private"
+    }
 
 
-@app.post("/v1/reconstruct")
-@app.post("/v1/reconstruct-sfm")
-async def reconstruct_sfm_endpoint(manifest: str = Form(...), images: List[UploadFile] = File(...), authorization: str | None = Header(default=None)):
+async def _reconstruct_common(manifest: str, images: List[UploadFile], authorization: str | None):
     auth(authorization)
-    case_id, _, expected = parse_manifest(manifest)
-    decoded, total = await read_images(images, expected)
+    case_id, shots, expected = parse_manifest(manifest)
+    decoded, raw, total = await read_images(images, expected)
+    stored_case_id, capture_id = ensure_case_and_capture(case_id, expected, raw)
+    persist_photos(stored_case_id, capture_id, shots, expected, raw)
     try:
         result = reconstruct_sfm(expected, decoded)
     finally:
@@ -290,19 +369,31 @@ async def reconstruct_sfm_endpoint(manifest: str = Form(...), images: List[Uploa
 
     vertices = result["vertices"]
     faces = result["faces"]
-    return {
-        "version": 3,
-        "case_id": case_id,
-        "mesh_kind": "photo_sfm_sparse_hull",
-        "unit": "relative",
-        "vertices": np.round(vertices, 6).tolist(),
-        "faces": faces,
-        "metrics": {
-            "input_images": len(expected),
-            "received_bytes": total,
-            "vertex_count": int(len(vertices)),
-            "triangle_count": int(len(faces)),
-            "scale_source": "relative SfM normalized for visualization; not metric",
-            "validated_for_clinical_measurement": False,
-        },
+    metrics = {
+        "input_images": len(expected), "received_bytes": total, "raw_points": int(result["raw_points"]),
+        "used_pairs": int(result["used_pairs"]), "vertex_count": int(len(vertices)),
+        "triangle_count": int(len(faces)), "median_reprojection_error_px": result["median_reprojection_error_px"],
+        "scale_source": "relative SfM normalized for visualization; not metric",
+        "validated_for_clinical_measurement": False, "photos_retained": True
     }
+    payload = {
+        "version": 4, "case_id": case_id, "mesh_kind": "photo_sfm_sparse_hull", "unit": "relative",
+        "vertices": np.round(vertices, 6).tolist(), "faces": faces, "metrics": metrics
+    }
+    persist_mesh(stored_case_id, capture_id, payload, metrics)
+    raw.clear()
+    return payload
+
+
+@app.post("/v1/reconstruct")
+async def reconstruct_endpoint(
+    manifest: str = Form(...), images: List[UploadFile] = File(...), authorization: str | None = Header(default=None),
+):
+    return await _reconstruct_common(manifest, images, authorization)
+
+
+@app.post("/v1/reconstruct-sfm")
+async def reconstruct_sfm_endpoint(
+    manifest: str = Form(...), images: List[UploadFile] = File(...), authorization: str | None = Header(default=None),
+):
+    return await _reconstruct_common(manifest, images, authorization)
