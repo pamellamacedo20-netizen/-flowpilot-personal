@@ -1,0 +1,10 @@
+import crypto from 'node:crypto';
+const secret=(bytes=32)=>crypto.randomBytes(bytes).toString('base64url');
+const email=process.argv[2]||'SEU_EMAIL_PRIVADO';
+console.log(`# FlowPilot Personal — segredos gerados em ${new Date().toISOString()}`);
+console.log(`PERSONAL_EMAIL=${email}`);
+console.log(`PERSONAL_PASSWORD=${secret(24)}`);
+console.log(`APP_ENCRYPTION_KEY=${secret(48)}`);
+console.log(`META_WEBHOOK_VERIFY_TOKEN=${secret(32)}`);
+console.log(`METRICS_TOKEN=${secret(32)}`);
+console.log('\n# Guarde estes valores em um gerenciador de senhas. Não faça commit deste output.');

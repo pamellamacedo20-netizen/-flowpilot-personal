@@ -1,0 +1,67 @@
+services:
+  - type: web
+    name: flowpilot-personal
+    runtime: node
+    plan: free
+    region: virginia
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /api/ready
+    autoDeployTrigger: commit
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: PERSONAL_MODE
+        value: "true"
+      - key: SETUP_MODE
+        value: "true"
+      - key: STORAGE_DRIVER
+        value: postgres
+      - key: DATABASE_URL
+        sync: false
+      - key: PGSSL
+        value: require
+      - key: PERSONAL_EMAIL
+        sync: false
+      - key: PERSONAL_PASSWORD
+        sync: false
+      - key: PERSONAL_NAME
+        value: Administrador
+      - key: PERSONAL_WORKSPACE_NAME
+        value: Meu Instagram
+      - key: SEED_DEMO
+        value: "false"
+      - key: APP_ENCRYPTION_KEY
+        generateValue: true
+      - key: META_WEBHOOK_VERIFY_TOKEN
+        generateValue: true
+      - key: METRICS_TOKEN
+        generateValue: true
+      - key: WORKER_ENABLED
+        value: "true"
+      - key: WORKER_INTERVAL_MS
+        value: "250"
+      - key: TRUST_PROXY
+        value: "true"
+      - key: HTTP_ACCESS_LOG
+        value: "true"
+      - key: API_RATE_MAX
+        value: "300"
+      - key: AUTH_RATE_MAX
+        value: "10"
+      - key: AUTH_RATE_WINDOW_MS
+        value: "900000"
+      - key: WEBHOOK_RATE_MAX
+        value: "600"
+      - key: ALLOW_PRIVATE_HTTP_ACTIONS
+        value: "false"
+      - key: META_GRAPH_VERSION
+        value: v26.0
+      - key: INSTAGRAM_APP_ID
+        sync: false
+      - key: INSTAGRAM_APP_SECRET
+        sync: false
+      - key: INSTAGRAM_WEBHOOK_SECRET
+        sync: false

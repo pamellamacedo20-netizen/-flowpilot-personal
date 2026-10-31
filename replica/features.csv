@@ -1,0 +1,59 @@
+feature,area,priority,original,clone,notes
+Dashboard metrics,Home,must,yes,yes,Metrics and recent activity
+Channel connection overview,Settings,must,yes,yes,Settings UI reflects backend connections and launches OAuth/manual dev connection
+Automation list,Automation,must,yes,yes,CRUD local/server synced
+Visual flow builder,Automation,must,yes,yes,Drag nodes and graph edges
+Start from scratch,Automation,must,yes,yes,New blank automation
+Trigger nodes,Automation,must,yes,yes,Generic trigger runtime
+Instagram comment trigger,Automation,must,yes,yes,Verified Meta webhook parser → durable job → trigger runtime
+Instagram story reply trigger,Automation,should,yes,yes,Normalized from messaging webhook reply_to.story and covered by fixture tests
+Instagram story mention trigger,Automation,should,yes,yes,Story-mention attachment/referral variants normalized and covered by fixture tests
+Instagram live comment trigger,Automation,should,yes,yes,live_comments webhook changes normalized and covered by fixture tests
+Keyword trigger,Automation,must,yes,yes,Keyword matching implemented in runtime and covered by tests
+AI intention trigger,Automation,should,yes,yes,Local deterministic classifier plus optional OpenAI-compatible provider runtime
+Message nodes,Automation,must,yes,yes,Text message nodes
+Condition nodes,Automation,must,yes,yes,Branch edges supported
+Action nodes,Automation,must,yes,yes,Action node and tag action runtime
+Smart delay,Automation,should,yes,yes,Delay nodes enqueue durable continuation jobs with retry state
+Randomizer,Automation,could,yes,yes,Uniform branch randomizer implemented in runtime and builder
+AI step,Automation,should,yes,yes,Runtime executes local fallback or optional OpenAI-compatible model and can enqueue reply
+Preview automation,Automation,should,yes,yes,Main-path preview
+Publish/pause automation,Automation,must,yes,yes,Local/server state
+Contacts list,Contacts,must,yes,yes,CRUD and search
+Contact profile,Contacts,must,yes,yes,Edit profile data
+Tags,Contacts,must,yes,yes,Tag UI and runtime add-tag action
+Segments,Contacts,must,yes,yes,"Rule engine filters by channel/provider, status, tags and query"
+Contact filters,Contacts,should,yes,yes,Search plus channel status and tag filters in contacts UI; segment engine supports compound rules
+Bulk actions,Contacts,should,yes,yes,Add/remove tag set status and privacy-aware bulk delete
+Contact import,Contacts,should,yes,yes,CSV import endpoint and UI with deduplication by email/phone and tag parsing
+Inbox threads,Inbox,must,yes,yes,Conversation list and transcript
+Manual reply,Inbox,must,yes,yes,Local/server state message composer
+Pause automation from Inbox,Inbox,must,yes,yes,Pause/resume state
+Conversation assignment,Inbox,should,yes,yes,Assignee selector
+Multi-user roles,Team,should,yes,yes,Workspace membership roles enforced server-side with owner/admin/agent/viewer RBAC
+Broadcast list,Broadcasts,must,yes,yes,Create/edit/delete campaigns
+Broadcast scheduling,Broadcasts,must,yes,yes,Scheduling endpoint creates durable dispatch jobs at ISO timestamps
+Broadcast segmentation,Broadcasts,must,yes,yes,Audience resolved by server-side segment rules at dispatch time
+Broadcast real delivery,Broadcasts,must,yes,yes,Broadcast fan-out enqueues official Instagram/WhatsApp provider delivery jobs
+WhatsApp channel,Integrations,must,yes,yes,Official Cloud API delivery adapter plus encrypted workspace connection
+Instagram channel,Integrations,must,yes,yes,Official Instagram messaging adapter plus encrypted workspace connection
+Messenger channel,Integrations,should,yes,yes,Meta page webhook parser and official Send API adapter with text/media delivery
+Telegram channel,Integrations,should,yes,yes,Bot API text/media adapter plus secret-protected webhook ingestion
+SMS channel,Integrations,could,yes,no,Out of prototype
+Email channel,Integrations,could,yes,no,Out of prototype
+TikTok channel,Integrations,could,yes,no,Out of prototype
+Webhook ingestion,Backend,must,yes,yes,"Meta verification challenge, raw-body HMAC verification, tenant routing and deduplication"
+Automation runtime,Backend,must,yes,yes,Graph traversal plus durable delay continuations and outbound delivery jobs
+Persistent shared state,Backend,must,yes,yes,JSON dev store and production Postgres driver/migrations
+Authentication,Backend,must,yes,yes,"Password login/register, PBKDF2 hashing, HttpOnly sessions"
+Workspace tenancy,Backend,must,yes,yes,Server-side membership checks and workspace isolation
+Audit log,Backend,should,yes,yes,Workspace audit trail API records sensitive operations
+Analytics and insights,Analytics,should,yes,yes,Workspace analytics endpoint and UI for flow runs node runs provider mix and delivery health
+Billing,Commercial,could,yes,yes,Plan entitlements and usage limits plus Stripe Checkout subscriptions and signed webhook plan synchronization
+Media attachments,Messaging,should,yes,yes,Flow message jobs Inbox sends and broadcasts support media payloads with provider-specific adapters
+Automation templates,Automation,should,yes,yes,Reusable clean-room gallery instantiates independent remapped flows
+Multiple active automation flows,Backend,must,yes,yes,Inbound events are matched against all active flows; delays resume the correct flowId
+Custom fields,Contacts,should,yes,yes,"Schema API/UI, contact values, segmentation operators and set_field runtime action"
+Sequences,Automation,should,yes,yes,Durable multi-step sequence enrollment and scheduled message processing
+External HTTP actions,Automation,should,yes,yes,"Interpolated outbound HTTP action with timeout, response capture and SSRF protections"
+Conversion funnel analytics,Analytics,should,yes,yes,"Flow entries/completions, edge runs and named conversion events exposed in Analytics"

@@ -1,0 +1,280 @@
+{
+  "activePage": "home",
+  "workspace": {
+    "name": "Clínica Aurora",
+    "plan": "Pro demo"
+  },
+  "channels": [
+    {
+      "id": "instagram",
+      "name": "Instagram",
+      "icon": "IG",
+      "connected": false,
+      "handle": ""
+    },
+    {
+      "id": "whatsapp",
+      "name": "WhatsApp",
+      "icon": "WA",
+      "connected": false,
+      "handle": ""
+    },
+    {
+      "id": "messenger",
+      "name": "Messenger",
+      "icon": "MS",
+      "connected": false,
+      "handle": ""
+    },
+    {
+      "id": "telegram",
+      "name": "Telegram",
+      "icon": "TG",
+      "connected": false,
+      "handle": ""
+    }
+  ],
+  "contacts": [
+    {
+      "id": "c1",
+      "name": "Ana Martins",
+      "channel": "Instagram",
+      "status": "Inscrito",
+      "tags": [
+        "lead quente",
+        "laser"
+      ],
+      "last": "Hoje, 19:24",
+      "email": "ana@example.com",
+      "phone": "(27) 99990-1122",
+      "fields": {}
+    },
+    {
+      "id": "c2",
+      "name": "Bruno Alves",
+      "channel": "WhatsApp",
+      "status": "Inscrito",
+      "tags": [
+        "orçamento"
+      ],
+      "last": "Hoje, 17:06",
+      "email": "bruno@example.com",
+      "phone": "(27) 99871-4400",
+      "fields": {}
+    }
+  ],
+  "automations": [
+    {
+      "id": "a1",
+      "name": "Comentário → avaliação capilar",
+      "status": "live",
+      "channel": "Instagram",
+      "updated": "Hoje, 18:40",
+      "runs": 842,
+      "flowId": "flow1"
+    }
+  ],
+  "broadcasts": [],
+  "threads": [],
+  "flow": {
+    "id": "flow1",
+    "name": "Comentário → avaliação capilar",
+    "live": true,
+    "zoom": 1,
+    "selected": "n2",
+    "nodes": [
+      {
+        "id": "n1",
+        "type": "trigger",
+        "name": "Comentário recebido",
+        "body": "Quando alguém comenta QUERO em um Reel",
+        "x": 80,
+        "y": 160,
+        "config": {
+          "triggerType": "instagram_comment",
+          "keywords": [
+            "quero"
+          ]
+        }
+      },
+      {
+        "id": "n2",
+        "type": "message",
+        "name": "Mensagem inicial",
+        "body": "Olá! Vi seu comentário. Quer receber o guia e responder 2 perguntas rápidas?",
+        "x": 350,
+        "y": 145
+      },
+      {
+        "id": "n3",
+        "type": "condition",
+        "name": "Interesse confirmado?",
+        "body": "Se respondeu sim ou clicou no botão",
+        "x": 640,
+        "y": 145
+      },
+      {
+        "id": "n4",
+        "type": "action",
+        "name": "Marcar lead",
+        "body": "Adicionar tag lead quente",
+        "x": 930,
+        "y": 75,
+        "config": {
+          "action": "add_tag",
+          "tag": "lead quente"
+        }
+      },
+      {
+        "id": "n5",
+        "type": "message",
+        "name": "Encerrar com elegância",
+        "body": "Sem problema. Quando quiser, estou por aqui.",
+        "x": 930,
+        "y": 260
+      }
+    ],
+    "edges": [
+      {
+        "id": "e1",
+        "from": "n1",
+        "to": "n2"
+      },
+      {
+        "id": "e2",
+        "from": "n2",
+        "to": "n3"
+      },
+      {
+        "id": "e3",
+        "from": "n3",
+        "to": "n4",
+        "label": "sim"
+      },
+      {
+        "id": "e4",
+        "from": "n3",
+        "to": "n5",
+        "label": "não"
+      }
+    ]
+  },
+  "customFields": [
+    {
+      "id": "cf_interesse",
+      "key": "interesse",
+      "label": "Interesse",
+      "type": "text"
+    },
+    {
+      "id": "cf_orcamento",
+      "key": "orcamento_estimado",
+      "label": "Orçamento estimado",
+      "type": "number"
+    }
+  ],
+  "sequences": [
+    {
+      "id": "seq_followup",
+      "name": "Follow-up padrão",
+      "status": "active",
+      "steps": [
+        {
+          "id": "step_1",
+          "delayMs": 0,
+          "text": "Olá, {{contact.name}}! Só passando para continuar nosso atendimento."
+        },
+        {
+          "id": "step_2",
+          "delayMs": 86400000,
+          "text": "Se ainda fizer sentido para você, posso te ajudar a avançar por aqui."
+        }
+      ]
+    }
+  ],
+  "flows": [
+    {
+      "id": "flow1",
+      "name": "Comentário → avaliação capilar",
+      "live": true,
+      "zoom": 1,
+      "selected": "n2",
+      "nodes": [
+        {
+          "id": "n1",
+          "type": "trigger",
+          "name": "Comentário recebido",
+          "body": "Quando alguém comenta QUERO em um Reel",
+          "x": 80,
+          "y": 160,
+          "config": {
+            "triggerType": "instagram_comment",
+            "keywords": [
+              "quero"
+            ]
+          }
+        },
+        {
+          "id": "n2",
+          "type": "message",
+          "name": "Mensagem inicial",
+          "body": "Olá! Vi seu comentário. Quer receber o guia e responder 2 perguntas rápidas?",
+          "x": 350,
+          "y": 145
+        },
+        {
+          "id": "n3",
+          "type": "condition",
+          "name": "Interesse confirmado?",
+          "body": "Se respondeu sim ou clicou no botão",
+          "x": 640,
+          "y": 145
+        },
+        {
+          "id": "n4",
+          "type": "action",
+          "name": "Marcar lead",
+          "body": "Adicionar tag lead quente",
+          "x": 930,
+          "y": 75,
+          "config": {
+            "action": "add_tag",
+            "tag": "lead quente"
+          }
+        },
+        {
+          "id": "n5",
+          "type": "message",
+          "name": "Encerrar com elegância",
+          "body": "Sem problema. Quando quiser, estou por aqui.",
+          "x": 930,
+          "y": 260
+        }
+      ],
+      "edges": [
+        {
+          "id": "e1",
+          "from": "n1",
+          "to": "n2"
+        },
+        {
+          "id": "e2",
+          "from": "n2",
+          "to": "n3"
+        },
+        {
+          "id": "e3",
+          "from": "n3",
+          "to": "n4",
+          "label": "sim"
+        },
+        {
+          "id": "e4",
+          "from": "n3",
+          "to": "n5",
+          "label": "não"
+        }
+      ]
+    }
+  ]
+}

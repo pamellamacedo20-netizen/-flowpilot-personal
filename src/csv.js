@@ -1,0 +1,3 @@
+function parseLine(line){const out=[];let cur='',quoted=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"'){if(quoted&&line[i+1]==='"'){cur+='"';i++}else quoted=!quoted}else if(ch===','&&!quoted){out.push(cur);cur=''}else cur+=ch}out.push(cur);return out.map(x=>x.trim())}
+function parseCsv(text){const lines=String(text||'').replace(/^\uFEFF/,'').split(/\r?\n/).filter(l=>l.trim());if(!lines.length)return[];const headers=parseLine(lines[0]).map(h=>h.toLowerCase());return lines.slice(1).map(line=>{const values=parseLine(line),row={};headers.forEach((h,i)=>row[h]=values[i]||'');return row})}
+module.exports={parseCsv,parseLine};

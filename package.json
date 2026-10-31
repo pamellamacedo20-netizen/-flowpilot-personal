@@ -1,0 +1,21 @@
+{
+  "name": "flowpilot-cleanroom",
+  "version": "0.8.2",
+  "private": true,
+  "description": "Private single-user conversational automation platform",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test tests/*.test.js",
+    "parity": "python3 replica/diff/parity.py replica/features.csv",
+    "check": "node --check server.js && node --check app.js && node --check src/runtime.js && node --check src/worker.js && node --check src/templating.js && node --check src/http-action.js && node --check src/sequences.js && node --check src/automation-templates.js && node --check src/stripe-billing.js && node --check src/instagram/oauth.js && node --check src/meta/webhooks.js && node --check src/compliance.js && node --check src/billing.js && node --check src/rate-limit.js && node --check src/observability.js && node --check src/ai.js && node --check src/providers/messenger.js && node --check src/providers/telegram.js && node --check src/store/json-store.js && node --check src/store/postgres-store.js",
+    "secrets": "node scripts/generate-personal-secrets.mjs",
+    "preflight": "node scripts/preflight-production.mjs"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "pg": "^8.16.3"
+  }
+}

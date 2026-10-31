@@ -1,0 +1,13 @@
+const test=require('node:test');
+const assert=require('node:assert/strict');
+const {noteInbound,evaluateOutbound}=require('../src/compliance');
+const {RateLimiter}=require('../src/rate-limit');
+const {billingSnapshot,enforce}=require('../src/billing');
+const whatsapp=require('../src/providers/whatsapp');
+
+test('opt-out and explicit opt-in update consent state',()=>{const c={status:'Inscrito'};noteInbound(c,'STOP','2026-10-30T10:00:00.000Z');assert.equal(c.status,'Descadastrado');assert.ok(c.optOutAt);noteInbound(c,'START','2026-10-30T11:00:00.000Z');assert.equal(c.status,'Inscrito');assert.equal(c.optOutAt,undefined)});
+test('compliance requires WhatsApp template outside customer-care window',()=>{const old={status:'Inscrito',lastInboundAt:'2026-10-01T00:00:00.000Z'};let r=evaluateOutbound({provider:'whatsapp',contact:old,payload:{text:'oi'},now:new Date('2026-10-30T00:00:00Z').getTime(),windowHours:24});assert.equal(r.allowed,false);r=evaluateOutbound({provider:'whatsapp',contact:old,payload:{template:{name:'retorno'}},now:new Date('2026-10-30T00:00:00Z').getTime(),windowHours:24});assert.equal(r.allowed,true);assert.equal(r.mode,'template')});
+test('compliance blocks every provider when contact opted out',()=>{const c={status:'Descadastrado',optOutAt:new Date().toISOString()};assert.equal(evaluateOutbound({provider:'instagram',contact:c,payload:{text:'x'}}).allowed,false);assert.equal(evaluateOutbound({provider:'whatsapp',contact:c,payload:{template:{name:'x'}}}).allowed,false)});
+test('rate limiter returns retry metadata after exceeding quota',()=>{const r=new RateLimiter({windowMs:1000,max:2});assert.equal(r.consume('a').ok,true);assert.equal(r.consume('a').ok,true);const third=r.consume('a');assert.equal(third.ok,false);assert.ok(third.retryAfterMs>0)});
+test('billing limits are normalized and enforced',()=>{const snap=billingSnapshot({plan:'Free'},{messages:999,automation_runs:0},100);assert.equal(snap.plan.id,'free');assert.doesNotThrow(()=>enforce(snap,'messages',1));assert.throws(()=>enforce(snap,'messages',2),/plan_limit_exceeded:messages/);assert.throws(()=>enforce(snap,'contacts',1),/plan_limit_exceeded:contacts/)});
+test('WhatsApp template adapter sends template payload',async()=>{const old=global.fetch;let seen;global.fetch=async(_url,opts)=>{seen=JSON.parse(opts.body);return{ok:true,status:200,json:async()=>({messages:[{id:'m1'}]})}};try{const out=await whatsapp.sendTemplate('5527999999999',{name:'retorno_consulta',language:'pt_BR'},{META_GRAPH_VERSION:'v26.0',META_ACCESS_TOKEN:'token',WA_PHONE_NUMBER_ID:'phone'});assert.equal(out.messages[0].id,'m1');assert.equal(seen.type,'template');assert.equal(seen.template.name,'retorno_consulta')}finally{global.fetch=old}});
