@@ -63,3 +63,71 @@ async function setupFromCode({code,redirectUri,env=process.env,fetchImpl=fetch}=
 }
 function newState(){return crypto.randomBytes(24).toString('base64url')}
 module.exports={graphVersion,scopes,credentials,buildAuthorizationUrl,exchangeCode,exchangeLongLivedToken,refreshLongLivedToken,getProfile,webhookFields,subscribeWebhooks,getSubscriptions,setupFromCode,newState};
+
+
+// Unified Login uses a Business Integration System User token on Facebook Graph.
+// Legacy integrations remain available when INSTAGRAM_LOGIN_MODE is not unified.
+const legacy = {...module.exports};
+function isUnified(env=process.env){return env.INSTAGRAM_LOGIN_MODE==='unified'}
+function unifiedCredentials(env){return {clientId:env.META_APP_ID||env.INSTAGRAM_APP_ID,clientSecret:env.META_APP_SECRET||env.INSTAGRAM_APP_SECRET}}
+async function unifiedRequest(resource,token,{env=process.env,fetchImpl=fetch,method='GET',params={}}={}){
+  const u=new URL(`https://graph.facebook.com/${graphVersion(env)}/${resource}`);
+  for(const [k,v] of Object.entries(params))u.searchParams.set(k,String(v));
+  const r=await fetchImpl(u,{method,headers:{authorization:`Bearer ${token}`,accept:'application/json'}});
+  const data=await r.json().catch(()=>({}));
+  // Never include provider payloads or URLs in errors: they can contain credentials.
+  if(!r.ok||data.error||data.success===false)throw new Error(`instagram_unified_request_failed:${r.status}:${data.error?.code||'unknown'}`);
+  return data;
+}
+async function unifiedProfile(token,options={}){
+  const env=options.env||process.env;
+  const data=await unifiedRequest('me/assigned_instagram_accounts',token,{...options,params:{fields:'id,username'}});
+  const accounts=data.data||[],wanted=options.accountId||env.INSTAGRAM_ACCOUNT_ID;
+  const profile=wanted?accounts.find(x=>String(x.id)===String(wanted)):(accounts.length===1?accounts[0]:null);
+  if(!profile)throw new Error(accounts.length>1?'instagram_account_selection_required':'instagram_assigned_account_not_found');
+  return profile;
+}
+function unifiedAuthorization({redirectUri,state,env=process.env}={}){
+  const {clientId}=unifiedCredentials(env);
+  const configId=env.INSTAGRAM_LOGIN_CONFIG_ID;
+  redirectUri=redirectUri||env.INSTAGRAM_OAUTH_REDIRECT_URI;
+  if(!clientId||!configId||!redirectUri||!state)throw new Error('instagram_unified_login_configuration_required');
+  const u=new URL('https://www.facebook.com/dialog/oauth');
+  for(const [k,v] of Object.entries({client_id:clientId,config_id:configId,redirect_uri:redirectUri,response_type:'code',display:'popup',prompt:'login',state}))u.searchParams.set(k,v);
+  return u.toString();
+}
+async function unifiedExchange({code,redirectUri,env=process.env,fetchImpl=fetch}={}){
+  const {clientId,clientSecret}=unifiedCredentials(env);
+  if(!code||!clientId||!clientSecret)throw new Error('instagram_unified_credentials_or_code_missing');
+  const u=new URL(`https://graph.facebook.com/${graphVersion(env)}/oauth/access_token`);
+  for(const [k,v] of Object.entries({client_id:clientId,client_secret:clientSecret,code,redirect_uri:redirectUri||env.INSTAGRAM_OAUTH_REDIRECT_URI}))if(v)u.searchParams.set(k,v);
+  const r=await fetchImpl(u,{headers:{accept:'application/json'}}),data=await r.json().catch(()=>({}));
+  if(!r.ok||data.error||!data.access_token)throw new Error(`instagram_unified_token_exchange_failed:${r.status}`);
+  return data;
+}
+async function unifiedSubscribe(token,options={}){
+  const profile=await unifiedProfile(token,options);
+  return unifiedRequest(`${encodeURIComponent(profile.id)}/subscribed_apps`,token,{...options,method:'POST',params:{subscribed_fields:(options.fields||webhookFields(options.env)).join(',')}});
+}
+module.exports.isUnified=isUnified;
+module.exports.scopes=(env=process.env)=>isUnified(env)?['instagram_basic','instagram_manage_messages','instagram_manage_comments']:legacy.scopes(env);
+module.exports.buildAuthorizationUrl=(options={})=>isUnified(options.env)?unifiedAuthorization(options):legacy.buildAuthorizationUrl(options);
+module.exports.exchangeCode=(options={})=>isUnified(options.env)?unifiedExchange(options):legacy.exchangeCode(options);
+module.exports.getProfile=(token,options={})=>isUnified(options.env)?unifiedProfile(token,options):legacy.getProfile(token,options);
+module.exports.subscribeWebhooks=(token,options={})=>isUnified(options.env)?unifiedSubscribe(token,options):legacy.subscribeWebhooks(token,options);
+module.exports.getSubscriptions=async(token,options={})=>{
+  if(!isUnified(options.env))return legacy.getSubscriptions(token,options);
+  const p=await unifiedProfile(token,options);return unifiedRequest(`${encodeURIComponent(p.id)}/subscribed_apps`,token,options);
+};
+module.exports.refreshLongLivedToken=async(token,options={})=>{
+  if(isUnified(options.env))throw new Error('unified_token_requires_reauthorization');
+  return legacy.refreshLongLivedToken(token,options);
+};
+module.exports.setupFromCode=async(options={})=>{
+  if(!isUnified(options.env))return legacy.setupFromCode(options);
+  const data=await unifiedExchange(options),token=data.access_token;
+  const [profile,business]=await Promise.all([unifiedProfile(token,options),unifiedRequest('me',token,{...options,params:{fields:'client_business_id'}})]);
+  if(!business.client_business_id)throw new Error('instagram_client_business_id_missing');
+  const subscription=await unifiedSubscribe(token,{...options,accountId:profile.id});
+  return {token,profile,subscription,accountId:String(profile.id),clientBusinessId:business.client_business_id,oauthKind:'unified_login',expiresIn:0,scopes:module.exports.scopes(options.env)};
+};
