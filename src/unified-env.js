@@ -12,17 +12,3 @@ if (String(process.env.INSTAGRAM_LOGIN_MODE || '').toLowerCase() === 'unified') 
     process.env.INSTAGRAM_APP_SECRET = process.env.META_APP_SECRET;
   }
 }
-
-// Safe startup diagnostic: reports presence only, never secret values.
-console.log(JSON.stringify({
-  ts: new Date().toISOString(),
-  level: 'info',
-  event: 'instagram.config.presence',
-  unified: String(process.env.INSTAGRAM_LOGIN_MODE || '').toLowerCase() === 'unified',
-  configId: Boolean(process.env.INSTAGRAM_LOGIN_CONFIG_ID),
-  metaAppId: Boolean(process.env.META_APP_ID),
-  metaAppSecret: Boolean(process.env.META_APP_SECRET),
-  instagramAppId: Boolean(process.env.INSTAGRAM_APP_ID),
-  instagramAppSecret: Boolean(process.env.INSTAGRAM_APP_SECRET),
-  setupMode: String(process.env.SETUP_MODE || '').toLowerCase() === 'true'
-}));
