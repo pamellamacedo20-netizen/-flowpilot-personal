@@ -1,7 +1,7 @@
 {
   "name": "pamella-academy-v9",
   "private": true,
-  "version": "0.9.0",
+  "version": "0.9.1",
   "engines": {"node": ">=20.9.0"},
   "scripts": {
     "dev": "next dev",
@@ -12,6 +12,8 @@
     "env:check": "node --env-file=.env.local scripts/check-env.mjs",
     "bootstrap:admin": "node --env-file=.env.local scripts/bootstrap-admin.mjs",
     "seed:starter": "node --env-file=.env.local scripts/seed-starter.mjs",
+    "seed:v9": "node --env-file=.env.local scripts/seed-v9-production.mjs",
+    "go-live:check": "node --env-file=.env.local scripts/go-live-readiness.mjs",
     "prebuild": "node scripts/unpack-source.mjs",
     "pretypecheck": "node scripts/unpack-source.mjs",
     "preverify": "node scripts/unpack-source.mjs"
