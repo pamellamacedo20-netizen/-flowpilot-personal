@@ -16,13 +16,15 @@ from scipy.spatial import ConvexHull, cKDTree
 
 APP_NAME = "GraftMap Photo SfM Backend"
 APP_VERSION = "0.11.0"
-API_TOKEN = os.environ.get("GRAFTMAP_API_TOKEN", "yshkYHoH1Jh3WMvWLHh0WHBQLZEfc4pIdp8TbdTkeMo")
+API_TOKEN = os.environ.get("GRAFTMAP_API_TOKEN", "")
 STORE_URL = os.environ.get("GRAFTMAP_STORE_URL", "https://myekasvkikqyqvbhduxh.supabase.co/functions/v1/graftmap-store")
 
 app = FastAPI(title=APP_NAME, version=APP_VERSION)
 
 
 def auth(authorization: str | None):
+    if not API_TOKEN:
+        raise HTTPException(status_code=503, detail="Server token not configured")
     if not authorization or authorization != f"Bearer {API_TOKEN}":
         raise HTTPException(status_code=401, detail="Unauthorized")
 
