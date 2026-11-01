@@ -1,13 +1,16 @@
 'use client';
-import { FormEvent,useState } from 'react';
-import { useRouter,useSearchParams } from 'next/navigation';
+import { FormEvent,useEffect,useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
 export default function Login(){
  const router=useRouter();
- const params=useSearchParams();
- const [msg,setMsg]=useState(params.get('password_updated')==='1'?'Senha atualizada. Entre com sua nova senha.':'');
+ const [msg,setMsg]=useState('');
  const demo=process.env.NEXT_PUBLIC_DEMO_MODE==='true';
+ useEffect(()=>{
+   const params=new URLSearchParams(window.location.search);
+   if(params.get('password_updated')==='1')setMsg('Senha atualizada. Entre com sua nova senha.');
+ },[]);
  async function submit(e:FormEvent<HTMLFormElement>){
    e.preventDefault();setMsg('');
    const fd=new FormData(e.currentTarget),email=String(fd.get('email')||'').trim(),password=String(fd.get('password')||'');
@@ -15,7 +18,7 @@ export default function Login(){
    try{
      const {error}=await createClient().auth.signInWithPassword({email,password});
      if(error)throw error;
-     const next=params.get('next');
+     const params=new URLSearchParams(window.location.search),next=params.get('next');
      router.push(next&&next.startsWith('/')&&!next.startsWith('//')?next:'/dashboard');
    }catch(err:any){setMsg(err.message||'Não foi possível entrar.')}
  }
