@@ -80,5 +80,5 @@ app.get('/api/graftmap/demo-mesh', requireAuth, (req, res) => proxy(req, res, '/
 app.post('/api/graftmap/uploads', requireAuth, (req, res) => proxy(req, res, '/v1/uploads'));
 app.post('/api/graftmap/reconstruct', requireAuth, (req, res) => proxy(req, res, '/v1/reconstruct'));
 
-app.get('*', (req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
+app.use((req, res) => res.sendFile(path.join(__dirname, 'public', 'index.html')));
 app.listen(PORT, '0.0.0.0', () => console.log(`GraftMap iPhone Test listening on ${PORT}`));
