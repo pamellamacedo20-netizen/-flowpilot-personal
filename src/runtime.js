@@ -11,7 +11,7 @@ function matchesTrigger(node,event){
     return event.intent!=='unknown';
   }
   if(c.triggerType&&c.triggerType!==event.type)return false;
-  if(Array.isArray(c.keywords)&&c.keywords.length){const text=String(event.text||'').toLowerCase();if(!c.keywords.some(k=>text.includes(String(k).toLowerCase())))return false}
+  if(Array.isArray(c.keywords)&&c.keywords.length){const text=String(event.text||'').toLowerCase();if(!c.keywords.some(k=>c.keywordMatch==='exact'?text.trim()===String(k).trim().toLowerCase():text.includes(String(k).toLowerCase())))return false}
   return true;
 }
 function delayMs(node){const c=node.config||{};if(Number.isFinite(Number(c.delayMs)))return Math.max(0,Number(c.delayMs));const body=String(node.body||'').toLowerCase();const m=body.match(/(\d+)\s*(minuto|minutos|min|hora|horas|h|segundo|segundos|s)/);if(!m)return 3600000;const n=Number(m[1]);return /(hora|horas|h)/.test(m[2])?n*3600000:/(minuto|minutos|min)/.test(m[2])?n*60000:n*1000}
