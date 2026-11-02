@@ -3,7 +3,7 @@ name: GraftMap iOS typecheck
 on:
   workflow_dispatch:
   push:
-    branches: [graftmap-ios-ci]
+    branches: [graftmap-ios-ci-run]
     paths:
       - 'ios_ci/**'
       - '.github/workflows/graftmap-ios-typecheck.yml'
