@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>DermaTricho Clinical</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">DT</div>
+      <nav>
+        <button class="nav-btn active" data-view="home">Início</button>
+        <button class="nav-btn" data-view="dermatology">Dermatologia</button>
+        <button class="nav-btn" data-view="trichology">Tricologia</button>
+        <button class="nav-btn" data-view="favorites">Favoritos</button>
+        <button class="nav-btn" data-view="recent">Recentes</button>
+      </nav>
+      <div class="sidebar-note">Módulo clínico para futura integração ao Derma Studio</div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div>
+          <div class="eyebrow">Biblioteca clínica</div>
+          <h1>Dermatologia + Tricologia</h1>
+        </div>
+        <button id="aiButton" class="ai-button">IA clínica</button>
+      </header>
+
+      <section class="search-panel">
+        <input id="searchInput" type="search" placeholder="Buscar doença, sintoma ou termo clínico…" autocomplete="off" />
+        <div id="categoryChips" class="chips"></div>
+      </section>
+
+      <section class="content-grid">
+        <div class="list-panel">
+          <div class="section-head">
+            <div>
+              <span class="eyebrow">Conteúdos</span>
+              <h2 id="listTitle">Todas as doenças</h2>
+            </div>
+            <span id="resultCount" class="count"></span>
+          </div>
+          <div id="diseaseList" class="disease-list"></div>
+        </div>
+
+        <article id="detailPanel" class="detail-panel empty">
+          <div class="empty-state">
+            <div class="empty-mark">DT</div>
+            <h2>Selecione uma condição</h2>
+            <p>A ficha clínica aparecerá aqui com diagnóstico, diferenciais, exames, tratamento, prescrição, alertas e seguimento.</p>
+          </div>
+        </article>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="aiDialog">
+    <form method="dialog" class="dialog-card">
+      <div class="section-head">
+        <div>
+          <span class="eyebrow">IA clínica</span>
+          <h2>Usar condição no contexto do paciente</h2>
+        </div>
+        <button class="icon-btn" value="cancel" aria-label="Fechar">×</button>
+      </div>
+      <p id="aiContext">Selecione uma doença para gerar um resumo contextual.</p>
+      <textarea id="patientContext" rows="6" placeholder="Cole ou descreva dados clínicos do paciente…"></textarea>
+      <div class="dialog-actions">
+        <button value="cancel" class="secondary">Cancelar</button>
+        <button id="generateAi" value="default" class="primary">Preparar contexto para IA</button>
+      </div>
+      <pre id="aiOutput" class="ai-output"></pre>
+    </form>
+  </dialog>
+
+  <script src="./data.js"></script>
+  <script src="./app.js"></script>
+</body>
+</html>
