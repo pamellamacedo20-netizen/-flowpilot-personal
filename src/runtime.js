@@ -110,6 +110,7 @@ async function executeFlow({store,workspaceId,state,event,startNodeId=null,enque
       if(enqueueDelivery&&current.config?.sendReply!==false&&event.provider&&event.recipientId&&ai.text)await store.enqueue(workspaceId,'send_message',{provider:event.provider,to:event.recipientId,text:ai.text,contactId:event.contactId,media:current.config?.media||null});
     }
     steps.push({id:current.id,type:current.type,name:current.name,output,intent:event.intent||null,aiProvider:event.aiProvider||null,actionResult});a.nodeRuns[current.id]=Number(a.nodeRuns[current.id]||0)+1;
+    if(current.type==='action'&&current.config?.action==='instagram_private_reply'){completed=true;break}
     const nextEdges=flow.edges.filter(e=>e.from===current.id);let edge=nextEdges[0];if(current.type==='condition'){const answer=event.answer||event.intent||event.aiOutput||event.httpStatus;if(answer!=null)edge=nextEdges.find(e=>String(e.label||'').toLowerCase()===String(answer).toLowerCase())||edge}if(current.type==='randomizer'&&nextEdges.length)edge=nextEdges[Math.floor(Math.random()*nextEdges.length)];
     const next=edge?flow.nodes.find(n=>n.id===edge.to):null;if(edge)a.edgeRuns[edge.id]=Number(a.edgeRuns[edge.id]||0)+1;
     if(current.type==='message'&&enqueueDelivery&&event.provider&&event.recipientId&&(output||current.config?.media)){await store.enqueue(workspaceId,'send_message',{provider:event.provider,to:event.recipientId,text:output||'',media:current.config?.media||null,contactId:event.contactId});}
