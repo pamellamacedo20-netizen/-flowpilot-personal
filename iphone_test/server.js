@@ -1,5 +1,6 @@
 import express from 'express';
 import crypto from 'crypto';
+import https from 'https';
 import path from 'path';
 import { fileURLToPath } from 'url';
 
@@ -11,7 +12,6 @@ const sessions = new Map();
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 app.disable('x-powered-by');
-app.use(express.json({ limit: '1mb' }));
 app.use(express.static(path.join(__dirname, 'public'), { extensions: ['html'] }));
 
 function parseCookies(req) {
@@ -39,7 +39,7 @@ function safeEqual(a, b) {
 }
 
 app.get('/api/session', (req, res) => res.json({ authenticated: isAuthed(req) }));
-app.post('/api/login', (req, res) => {
+app.post('/api/login', express.json({ limit: '64kb' }), (req, res) => {
   if (!TOKEN) return res.status(503).json({ error: 'server_not_configured' });
   const supplied = req.body?.token || '';
   if (!safeEqual(supplied, TOKEN)) return res.status(401).json({ error: 'invalid_token' });
@@ -55,21 +55,35 @@ app.post('/api/logout', requireAuth, (req, res) => {
   res.json({ ok: true });
 });
 
-async function proxy(req, res, targetPath) {
+function proxy(req, res, targetPath) {
   try {
+    const target = new URL(targetPath, BACKEND);
     const headers = { Authorization: `Bearer ${TOKEN}` };
-    if (req.headers['content-type']) headers['Content-Type'] = req.headers['content-type'];
-    const opts = { method: req.method, headers };
-    if (req.method !== 'GET' && req.method !== 'HEAD') {
-      opts.body = req;
-      opts.duplex = 'half';
-    }
-    const upstream = await fetch(BACKEND + targetPath, opts);
-    const body = Buffer.from(await upstream.arrayBuffer());
-    res.status(upstream.status);
-    const ct = upstream.headers.get('content-type');
-    if (ct) res.setHeader('Content-Type', ct);
-    res.send(body);
+    if (req.headers['content-type']) headers['content-type'] = req.headers['content-type'];
+    if (req.headers['content-length']) headers['content-length'] = req.headers['content-length'];
+
+    const upstreamReq = https.request(target, {
+      method: req.method,
+      headers,
+      timeout: 240000
+    }, upstreamRes => {
+      res.status(upstreamRes.statusCode || 502);
+      const contentType = upstreamRes.headers['content-type'];
+      const contentLength = upstreamRes.headers['content-length'];
+      if (contentType) res.setHeader('content-type', contentType);
+      if (contentLength) res.setHeader('content-length', contentLength);
+      upstreamRes.pipe(res);
+    });
+
+    upstreamReq.on('timeout', () => upstreamReq.destroy(new Error('upstream_timeout')));
+    upstreamReq.on('error', err => {
+      if (!res.headersSent) res.status(502).json({ error: 'proxy_failed', detail: String(err) });
+      else res.end();
+    });
+    req.on('aborted', () => upstreamReq.destroy());
+
+    if (req.method === 'GET' || req.method === 'HEAD') upstreamReq.end();
+    else req.pipe(upstreamReq);
   } catch (err) {
     res.status(502).json({ error: 'proxy_failed', detail: String(err) });
   }
