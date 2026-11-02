@@ -6,7 +6,7 @@
     {label:'Visão geral',terms:['definição e contexto clínico','fisiopatologia / mecanismo','apresentação clínica','fatores de risco, gatilhos e anamnese dirigida','exame dermatológico / tricológico dirigido']},
     {label:'Diagnóstico',terms:['como confirmar o diagnóstico','diagnósticos diferenciais','exames e investigação','tricoscopia']},
     {label:'Classificação e gravidade',terms:['avaliar gravidade / classificação','gravidade / classificação']},
-    {label:'Tratamento',terms:['tratamento completo','abordagem terapêutica','conduta orientada pela gravidade','prescrição prática no consultório','prescrição / conduta editável']},
+    {label:'Tratamento',terms:['tratamento completo','algoritmo terapêutico','abordagem terapêutica','conduta orientada pela gravidade','prescrição prática no consultório','prescrição / conduta editável']},
     {label:'Segurança e seguimento',terms:['situações especiais e individualização','alertas e contraindicações','acompanhamento e reavaliação','manutenção, prevenção e recidiva','prognóstico e objetivos terapêuticos','orientações ao paciente']},
     {label:'Ferramentas da consulta',terms:['anotações clínicas','fontes e atualização','referências-base','referências e base de evidência']}
   ];
