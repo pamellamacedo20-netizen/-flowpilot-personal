@@ -14,12 +14,13 @@
   const allDetails = () => [...panel.querySelectorAll('details.clinical-accordion')];
 
   const groups = [
-    {key:'overview',label:'Visão geral',terms:['definição e contexto clínico','apresentação clínica']},
-    {key:'diagnosis',label:'Diagnóstico',terms:['como confirmar o diagnóstico','exames e investigação']},
+    {key:'overview',label:'Visão geral',terms:['definição e contexto clínico','apresentação clínica','fatores de risco']},
+    {key:'diagnosis',label:'Diagnóstico',terms:['como confirmar o diagnóstico','diagnósticos diferenciais','exames e investigação','tricoscopia','exame dermatológico']},
     {key:'severity',label:'Score / classificação',terms:['avaliar gravidade / classificação','gravidade / classificação']},
-    {key:'treatment',label:'Tratamento',terms:['abordagem terapêutica','conduta orientada pela gravidade']},
+    {key:'treatment',label:'Tratamento completo',terms:['tratamento completo','abordagem terapêutica','conduta orientada pela gravidade']},
     {key:'prescription',label:'Prescrição',terms:['prescrição prática no consultório','prescrição / conduta editável']},
-    {key:'followup',label:'Seguimento',terms:['acompanhamento e reavaliação']},
+    {key:'safety',label:'Segurança',terms:['alertas e contraindicações','situações especiais e individualização']},
+    {key:'followup',label:'Seguimento',terms:['acompanhamento e reavaliação','prognóstico e objetivos terapêuticos']},
     {key:'notes',label:'Anotações',terms:['anotações clínicas']},
     {key:'references',label:'Referências',terms:['referências-base','referências e base de evidência','fontes e atualização']}
   ];
@@ -111,9 +112,9 @@
     }
     const map = targetMap();
     const actions = info.type === 'disease' ? [
-      ['prescription','Prescrever'],['severity','Score / classificação'],['notes','Anotações'],['references','Referências']
+      ['treatment','Tratamento completo'],['prescription','Prescrever'],['severity','Score / classificação'],['notes','Anotações'],['references','Referências']
     ] : [
-      ['prescription','Modelo de receita'],['notes','Anotações'],['references','Referências']
+      ['prescription','Modelo de receita'],['safety','Segurança'],['notes','Anotações'],['references','Referências']
     ];
     const actionHtml = actions.map(([key,label]) => `<button type="button" class="consultorio-action" data-consultorio-jump="${key}" ${map[key]?'':'disabled'}>${esc(label)}</button>`).join('');
     const navHtml = groups.filter(g => map[g.key]).map(g => `<button type="button" class="consultorio-section-link" data-consultorio-jump="${g.key}">${esc(g.label)}</button>`).join('');
