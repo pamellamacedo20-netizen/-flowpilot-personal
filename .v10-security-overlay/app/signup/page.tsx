@@ -9,7 +9,7 @@ export default function Signup(){
    e.preventDefault();setMsg('');setSending(true);
    const fd=new FormData(e.currentTarget),email=String(fd.get('email')||'').trim(),password=String(fd.get('password')||''),fullName=String(fd.get('full_name')||'').trim();
    const strength=validateStrongPassword(password);if(!strength.ok){setSending(false);setMsg(strength.message);return}
-   const {data,error}=await createClient().auth.signUp({email,password,options:{data:{full_name:fullName},emailRedirectTo:`${window.location.origin}/auth/confirm?next=/dashboard`}});
+   const {data,error}=await createClient().auth.signUp({email,password,options:{data:{full_name:fullName},emailRedirectTo:`${process.env.NEXT_PUBLIC_SITE_URL||window.location.origin}/auth/confirm?next=/dashboard`}});
    setSending(false);
    if(error){setMsg(error.message);return}
    if(data.session){router.replace('/dashboard');return}
