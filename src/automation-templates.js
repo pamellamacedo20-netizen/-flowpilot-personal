@@ -8,9 +8,9 @@ const templates=[
   {id:'comment-to-dm',name:'Comentário/Reel → resposta pública + DM',channel:'Instagram',description:'Responde publicamente e envia a primeira private reply usando o comment_id. A continuação depende da interação do usuário.',flow:{nodes:[
     {id:'t1',type:'trigger',name:'Comentário com palavra-chave',body:'Quando alguém comentar QUERO',x:80,y:150,config:{triggerType:'instagram_comment',keywords:['quero'],keywordMatch:'full_word',mediaScope:'all'}},
     {id:'t2',type:'action',name:'Resposta pública',body:'Te mandei uma mensagem no direct.',x:360,y:80,config:{action:'instagram_public_reply',replies:['Te mandei uma mensagem no direct 😊','Acabei de te enviar os detalhes no direct.','Mensagem enviada no direct ✨']}},
-    {id:'t3',type:'action',name:'Private reply',body:'Olá! Vi seu comentário e te mandei esta mensagem para continuar por aqui. Toque em responder se quiser que eu te ajude.',x:670,y:150,config:{action:'instagram_private_reply'}},
-    {id:'t4',type:'action',name:'Marcar origem',body:'Adicionar tag comentario_instagram',x:960,y:150,config:{action:'add_tag',tag:'comentario_instagram'}}
-  ],edges:[{id:'te1',from:'t1',to:'t2'},{id:'te2',from:'t2',to:'t3'}]}},
+    {id:'t4',type:'action',name:'Marcar origem',body:'Adicionar tag comentario_instagram',x:650,y:80,config:{action:'add_tag',tag:'comentario_instagram'}},
+    {id:'t3',type:'action',name:'Private reply',body:'Olá! Vi seu comentário e te mandei esta mensagem para continuar por aqui. Toque em responder se quiser que eu te ajude.',x:930,y:150,config:{action:'instagram_private_reply'}}
+  ],edges:[{id:'te1',from:'t1',to:'t2'},{id:'te2',from:'t2',to:'t4'},{id:'te3',from:'t4',to:'t3'}]}},
   {id:'instagram-story-reply',name:'Resposta ao Story → DM',channel:'Instagram',description:'Inicia uma automação quando alguém responde ou reage a um Story.',flow:{nodes:[
     {id:'sr1',type:'trigger',name:'Resposta ao Story',body:'Quando alguém responder ao Story',x:80,y:150,config:{triggerType:'instagram_story_reply',storyScope:'all'}},
     {id:'sr2',type:'message',name:'Responder no Direct',body:'Oi! Vi sua resposta ao Story 😊 Como posso te ajudar?',x:380,y:150,config:{}},
@@ -29,9 +29,9 @@ const templates=[
   ],edges:[{id:'dre1',from:'dr1',to:'dr2'},{id:'dre2',from:'dr2',to:'dr3'}]}},
   {id:'instagram-live-comments',name:'Comentários da Live → private reply',channel:'Instagram',description:'Detecta comentários durante uma Live e envia uma private reply enquanto a transmissão está ativa.',flow:{nodes:[
     {id:'lc1',type:'trigger',name:'Comentário na Live',body:'Quando alguém comentar QUERO durante a Live',x:80,y:150,config:{triggerType:'instagram_live_comment',keywords:['quero'],keywordMatch:'full_word'}},
-    {id:'lc2',type:'action',name:'Private reply da Live',body:'Oi! Vi seu comentário na Live. Responda esta mensagem e eu continuo por aqui com você.',x:400,y:150,config:{action:'instagram_private_reply'}},
-    {id:'lc3',type:'action',name:'Marcar origem',body:'Adicionar tag live_instagram',x:740,y:150,config:{action:'add_tag',tag:'live_instagram'}}
-  ],edges:[{id:'lce1',from:'lc1',to:'lc2'}]}},
+    {id:'lc3',type:'action',name:'Marcar origem',body:'Adicionar tag live_instagram',x:390,y:100,config:{action:'add_tag',tag:'live_instagram'}},
+    {id:'lc2',type:'action',name:'Private reply da Live',body:'Oi! Vi seu comentário na Live. Responda esta mensagem e eu continuo por aqui com você.',x:700,y:150,config:{action:'instagram_private_reply'}}
+  ],edges:[{id:'lce1',from:'lc1',to:'lc3'},{id:'lce2',from:'lc3',to:'lc2'}]}},
   {id:'lead-qualification-ai',name:'Qualificação com IA',channel:'Instagram',description:'Detecta intenção, salva campo personalizado e marca conversão.',flow:{nodes:[
     {id:'q1',type:'trigger',name:'Intenção de orçamento',body:'Detectar intenção comercial',x:80,y:150,config:{triggerType:'ai_intent',threshold:1,intentDefinitions:[{name:'orcamento',examples:['quanto custa','valor','preço','orçamento']},{name:'duvida',examples:['como funciona','tenho dúvida']}] ,intents:['orcamento']}},
     {id:'q2',type:'ai',name:'Responder e qualificar',body:'Resposta curta orientada por contexto',x:370,y:150,config:{prompt:'Responda de forma objetiva a {{text}} e faça uma pergunta de qualificação.',fallbackText:'Posso te explicar os valores e entender qual opção faz mais sentido para você.',sendReply:true}},
