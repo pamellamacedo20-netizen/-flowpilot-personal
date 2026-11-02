@@ -1,0 +1,27 @@
+name: GraftMap iOS typecheck
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [graftmap-ios-ci]
+    paths:
+      - 'ios_ci/**'
+      - '.github/workflows/graftmap-ios-typecheck.yml'
+
+jobs:
+  typecheck:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract app sources
+        run: |
+          mkdir -p /tmp/graftmap
+          base64 --decode ios_ci/graftmap097-app.tar.gz.b64 > /tmp/graftmap/app.tar.gz
+          tar -xzf /tmp/graftmap/app.tar.gz -C /tmp/graftmap
+      - name: Typecheck against iOS Simulator SDK
+        run: |
+          SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)
+          swiftc -typecheck -parse-as-library \
+            -target arm64-apple-ios16.0-simulator \
+            -sdk "$SDK" \
+            /tmp/graftmap/App/*.swift
