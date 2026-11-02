@@ -1,0 +1,8 @@
+(() => {
+  const sidebar=document.querySelector('.sidebar');if(!sidebar)return;
+  const keys=['dt-favorites','dt-recent','dt-clinical-notes-v1','dt-rx-notes-v1','dt-rx-patient-profile-v1'];
+  const box=document.createElement('div');box.className='workspace-backup';box.innerHTML='<button type="button" class="text-btn" data-export-dt>Exportar dados</button><span>·</span><label class="text-btn import-label">Importar<input type="file" accept="application/json" data-import-dt hidden></label>';
+  sidebar.appendChild(box);
+  box.querySelector('[data-export-dt]').addEventListener('click',()=>{const payload={app:'DermaTricho Clinical',version:1,exportedAt:new Date().toISOString(),data:{}};keys.forEach(k=>payload.data[k]=localStorage.getItem(k));const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`dermatricho-backup-${new Date().toISOString().slice(0,10)}.json`;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);});
+  box.querySelector('[data-import-dt]').addEventListener('change',async e=>{const f=e.target.files?.[0];if(!f)return;try{const j=JSON.parse(await f.text());if(j?.app!=='DermaTricho Clinical'||!j.data)throw new Error('invalid');keys.forEach(k=>{if(j.data[k]!==undefined&&j.data[k]!==null)localStorage.setItem(k,j.data[k]);});location.reload();}catch{alert('Arquivo de backup inválido.')}});
+})();
