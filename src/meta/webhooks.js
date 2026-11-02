@@ -16,7 +16,8 @@ function parseInstagram(body){
   const out=[];
   for(const entry of body.entry||[]){
     for(const m of entry.messaging||[]){
-      const msg=m.message||{},media=(msg.attachments||[]).map(a=>({type:a.type||'attachment',url:a.payload?.url||''})),storyReply=msg.reply_to?.story||null,storyMention=(msg.attachments||[]).find(a=>a.type==='story_mention')?.payload||m.referral?.story||null,type=storyReply?'instagram_story_reply':storyMention||m.referral?.source==='STORY_MENTION'?'instagram_story_mention':'instagram_message';out.push({provider:'instagram',type,providerEventId:msg.mid||m.referral?.ref||stableEventId('instagram',m),recipientId:m.sender?.id,text:msg.text||'',raw:m,media,story:storyReply||storyMention||null,metadata:{storyId:storyReply?.id||storyMention?.id||'',storyUrl:storyReply?.url||storyMention?.url||'',referralSource:m.referral?.source||''},contact:{name:m.sender?.id||'Instagram contact',providerUserId:m.sender?.id}});
+      const msg=m.message||{},media=(msg.attachments||[]).map(a=>({type:a.type||'attachment',url:a.payload?.url||''})),storyReply=msg.reply_to?.story||null,storyMention=(msg.attachments||[]).find(a=>a.type==='story_mention')?.payload||m.referral?.story||null,type=storyReply?'instagram_story_reply':storyMention||m.referral?.source==='STORY_MENTION'?'instagram_story_mention':'instagram_message',quickReplyPayload=msg.quick_reply?.payload||null,messageId=msg.mid||null;
+      out.push({provider:'instagram',type,providerEventId:messageId||m.referral?.ref||stableEventId('instagram',m),messageId,recipientId:m.sender?.id,text:msg.text||'',quickReplyPayload,raw:m,media,story:storyReply||storyMention||null,metadata:{messageId,quickReplyPayload,storyId:storyReply?.id||storyMention?.id||'',storyUrl:storyReply?.url||storyMention?.url||'',referralSource:m.referral?.source||''},contact:{name:m.sender?.id||'Instagram contact',providerUserId:m.sender?.id}});
     }
     for(const c of entry.changes||[]){
       if(c.field==='comments'||c.field==='live_comments'){
@@ -24,7 +25,7 @@ function parseInstagram(body){
         out.push({provider:'instagram',type:c.field==='live_comments'?'instagram_live_comment':'instagram_comment',providerEventId:commentId||stableEventId('instagram',c),recipientId:providerUserId,text:v.text||'',raw:c,commentId,mediaId,commentCreatedAt:v.created_time||v.timestamp||null,metadata:{commentId,mediaId,parentId:String(v.parent_id||v.parent?.id||''),username,field:c.field},contact:{name:username||providerUserId||'Instagram contact',providerUserId}})
       }
       if(c.field==='mentions'){
-        const v=c.value||{};out.push({provider:'instagram',type:'instagram_story_mention',providerEventId:v.id||stableEventId('instagram',c),recipientId:v.from?.id||'',text:v.text||'',raw:c,metadata:{storyId:v.story_id||v.media_id||'',username:v.from?.username||''},contact:{name:v.from?.username||v.from?.id||'Instagram contact',providerUserId:v.from?.id||''}})
+        const v=c.value||{};out.push({provider:'instagram',type:'instagram_story_mention',providerEventId:v.id||stableEventId('instagram',c),messageId:null,recipientId:v.from?.id||'',text:v.text||'',raw:c,metadata:{storyId:v.story_id||v.media_id||'',username:v.from?.username||''},contact:{name:v.from?.username||v.from?.id||'Instagram contact',providerUserId:v.from?.id||''}})
       }
     }
   }

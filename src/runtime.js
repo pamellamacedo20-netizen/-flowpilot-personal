@@ -78,6 +78,7 @@ function cooldownAllowed(state,flow,node,event,now=Date.now()){
   state.triggerCooldowns=state.triggerCooldowns||{};const last=Date.parse(state.triggerCooldowns[cooldownKey(flow,node,event)]||'');return !Number.isFinite(last)||(now-last)>=hours*3600000;
 }
 function markCooldown(state,flow,node,event,now=new Date()){state.triggerCooldowns=state.triggerCooldowns||{};state.triggerCooldowns[cooldownKey(flow,node,event)]=now.toISOString()}
+function interpolateQuickReplies(items,ctx){return (Array.isArray(items)?items:[]).slice(0,13).map(q=>({content_type:q.content_type||q.contentType||'text',title:interpolate(String(q.title||q.text||''),ctx),payload:interpolate(String(q.payload||q.value||q.title||''),ctx),...(q.image_url||q.imageUrl?{image_url:interpolate(String(q.image_url||q.imageUrl),ctx)}:{})}))}
 async function executeAction({node,event,state,store,workspaceId,httpFetch}){
   const cfg=node.config||{},contact=contactFor(state,event),ctx=contextFor({event,contact,state});if(!contact&&['add_tag','remove_tag','set_field','enroll_sequence'].includes(cfg.action))return null;
   if(cfg.action==='add_tag'){contact.tags=Array.from(new Set([...(contact.tags||[]),cfg.tag].filter(Boolean)));return{tag:cfg.tag}}
@@ -89,6 +90,9 @@ async function executeAction({node,event,state,store,workspaceId,httpFetch}){
     const commentId=event.commentId||event.metadata?.commentId||event.providerEventId;if(!commentId)throw new Error('instagram_comment_id_required');
     const raw=pickVariation(cfg.replies,event,node)||cfg.text||node.body||'';const text=interpolate(String(raw),ctx);if(!text)throw new Error('instagram_reply_text_required');
     const type=cfg.action==='instagram_public_reply'?'instagram_public_reply':'instagram_private_reply';await store.enqueue(workspaceId,type,{commentId,text,contactId:event.contactId,accountId:event.accountId||null,isLive:event.type==='instagram_live_comment'});return{queued:true,type,commentId};
+  }
+  if(cfg.action==='instagram_react'){
+    const messageId=event.messageId||event.metadata?.messageId;if(!messageId||!event.recipientId)return{queued:false,reason:'message_id_unavailable'};await store.enqueue(workspaceId,'instagram_react',{to:event.recipientId,messageId,reaction:cfg.reaction||'love',contactId:event.contactId,accountId:event.accountId||null});return{queued:true,type:'instagram_react',messageId};
   }
   if(cfg.action==='http_request'){
     const result=await executeHttpAction(cfg.http||cfg,ctx,{fetchImpl:httpFetch||fetch});event.httpResponse=result.data;event.httpStatus=result.status;
@@ -107,13 +111,13 @@ async function executeFlow({store,workspaceId,state,event,startNodeId=null,enque
     if(current.type==='action')actionResult=await executeAction({node:current,event,state,store,workspaceId,httpFetch});
     if(current.type==='ai'){
       const ai=await runAiStep(current,event);output=ai.text;event.aiOutput=ai.text;event.aiProvider=ai.provider;if(ai.intent){event.intent=ai.intent;event.intentConfidence=ai.confidence}
-      if(enqueueDelivery&&current.config?.sendReply!==false&&event.provider&&event.recipientId&&ai.text)await store.enqueue(workspaceId,'send_message',{provider:event.provider,to:event.recipientId,text:ai.text,contactId:event.contactId,media:current.config?.media||null});
+      if(enqueueDelivery&&current.config?.sendReply!==false&&event.provider&&event.recipientId&&ai.text)await store.enqueue(workspaceId,'send_message',{provider:event.provider,to:event.recipientId,text:ai.text,contactId:event.contactId,media:current.config?.media||null,quickReplies:interpolateQuickReplies(current.config?.quickReplies||[],ctx)});
     }
     steps.push({id:current.id,type:current.type,name:current.name,output,intent:event.intent||null,aiProvider:event.aiProvider||null,actionResult});a.nodeRuns[current.id]=Number(a.nodeRuns[current.id]||0)+1;
     if(current.type==='action'&&current.config?.action==='instagram_private_reply'){completed=true;break}
-    const nextEdges=flow.edges.filter(e=>e.from===current.id);let edge=nextEdges[0];if(current.type==='condition'){const answer=event.answer||event.intent||event.aiOutput||event.httpStatus;if(answer!=null)edge=nextEdges.find(e=>String(e.label||'').toLowerCase()===String(answer).toLowerCase())||edge}if(current.type==='randomizer'&&nextEdges.length)edge=nextEdges[Math.floor(Math.random()*nextEdges.length)];
+    const nextEdges=flow.edges.filter(e=>e.from===current.id);let edge=nextEdges[0];if(current.type==='condition'){const answer=event.answer||event.quickReplyPayload||event.metadata?.quickReplyPayload||event.intent||event.aiOutput||event.httpStatus;if(answer!=null)edge=nextEdges.find(e=>String(e.label||'').toLowerCase()===String(answer).toLowerCase())||edge}if(current.type==='randomizer'&&nextEdges.length)edge=nextEdges[Math.floor(Math.random()*nextEdges.length)];
     const next=edge?flow.nodes.find(n=>n.id===edge.to):null;if(edge)a.edgeRuns[edge.id]=Number(a.edgeRuns[edge.id]||0)+1;
-    if(current.type==='message'&&enqueueDelivery&&event.provider&&event.recipientId&&(output||current.config?.media)){await store.enqueue(workspaceId,'send_message',{provider:event.provider,to:event.recipientId,text:output||'',media:current.config?.media||null,contactId:event.contactId});}
+    if(current.type==='message'&&enqueueDelivery&&event.provider&&event.recipientId&&(output||current.config?.media)){await store.enqueue(workspaceId,'send_message',{provider:event.provider,to:event.recipientId,text:output||'',media:current.config?.media||null,quickReplies:interpolateQuickReplies(current.config?.quickReplies||[],ctx),contactId:event.contactId});}
     if(current.type==='delay'&&next){const runAt=new Date(Date.now()+delayMs(current)).toISOString();await store.enqueue(workspaceId,'continue_flow',{event,startNodeId:next.id,flowId:flow.id},runAt);break}
     if(!next){completed=true;break}current=next;
   }
@@ -130,4 +134,4 @@ async function executeMatchingFlows({store,workspaceId,state,event,enqueueDelive
   let results=await runFlowGroup(specific,{store,workspaceId,state,event,enqueueDelivery,httpFetch});if(!results.length)results=await runFlowGroup(defaults,{store,workspaceId,state,event,enqueueDelivery,httpFetch});
   const first=results[0]||null;return{matched:results.length>0,runs:results,matchedCount:results.length,intent:first?.intent||event.intent||null,flowId:first?.flowId||null,steps:first?.steps||[],completed:first?.completed||false};
 }
-module.exports={matchesTrigger,executeFlow,executeMatchingFlows,flowsForState,delayMs,enrichIntent,executeAction,recordConversion,keywordMatches,triggerTextMatches,triggerScopeMatches,triggerTypeMatches,cooldownAllowed,markCooldown,pickVariation};
+module.exports={matchesTrigger,executeFlow,executeMatchingFlows,flowsForState,delayMs,enrichIntent,executeAction,recordConversion,keywordMatches,triggerTextMatches,triggerScopeMatches,triggerTypeMatches,cooldownAllowed,markCooldown,pickVariation,interpolateQuickReplies};

@@ -13,18 +13,19 @@ const templates=[
   ],edges:[{id:'te1',from:'t1',to:'t2'},{id:'te2',from:'t2',to:'t4'},{id:'te3',from:'t4',to:'t3'}]}},
   {id:'instagram-story-reply',name:'Resposta ao Story → DM',channel:'Instagram',description:'Inicia uma automação quando alguém responde ou reage a um Story.',flow:{nodes:[
     {id:'sr1',type:'trigger',name:'Resposta ao Story',body:'Quando alguém responder ao Story',x:80,y:150,config:{triggerType:'instagram_story_reply',storyScope:'all'}},
-    {id:'sr2',type:'message',name:'Responder no Direct',body:'Oi! Vi sua resposta ao Story 😊 Como posso te ajudar?',x:380,y:150,config:{}},
+    {id:'sr2',type:'message',name:'Responder no Direct',body:'Oi! Vi sua resposta ao Story 😊 Como posso te ajudar?',x:380,y:150,config:{quickReplies:[{title:'Agendar',payload:'AGENDAR'},{title:'Valores',payload:'VALORES'},{title:'Tirar dúvida',payload:'DUVIDA'}]}},
     {id:'sr3',type:'action',name:'Marcar origem',body:'Adicionar tag story_reply',x:690,y:150,config:{action:'add_tag',tag:'story_reply'}}
   ],edges:[{id:'sre1',from:'sr1',to:'sr2'},{id:'sre2',from:'sr2',to:'sr3'}]}},
-  {id:'instagram-story-mention',name:'Menção em Story → resposta',channel:'Instagram',description:'Responde a menções públicas em Stories e pode limitar a uma resposta por usuário a cada 24 horas.',flow:{nodes:[
+  {id:'instagram-story-mention',name:'Menção em Story → reação + resposta',channel:'Instagram',description:'Reage com ❤️ quando possível, responde a menções públicas e limita a uma resposta por usuário a cada 24 horas.',flow:{nodes:[
     {id:'sm1',type:'trigger',name:'Menção em Story',body:'Quando alguém mencionar seu perfil em um Story público',x:80,y:150,config:{triggerType:'instagram_story_mention',oncePer24h:true}},
-    {id:'sm2',type:'delay',name:'Atraso natural',body:'30 segundos',x:360,y:150,config:{delayMs:30000}},
-    {id:'sm3',type:'message',name:'Agradecer menção',body:'Obrigada por me mencionar no seu Story! 💛',x:650,y:150,config:{}},
-    {id:'sm4',type:'action',name:'Marcar origem',body:'Adicionar tag story_mention',x:930,y:150,config:{action:'add_tag',tag:'story_mention'}}
-  ],edges:[{id:'sme1',from:'sm1',to:'sm2'},{id:'sme2',from:'sm2',to:'sm3'},{id:'sme3',from:'sm3',to:'sm4'}]}},
+    {id:'sm0',type:'action',name:'Reagir com ❤️',body:'Reagir à menção quando houver message_id',x:330,y:90,config:{action:'instagram_react',reaction:'love'}},
+    {id:'sm2',type:'delay',name:'Atraso natural',body:'30 segundos',x:560,y:150,config:{delayMs:30000}},
+    {id:'sm3',type:'message',name:'Agradecer menção',body:'Obrigada por me mencionar no seu Story! 💛',x:820,y:150,config:{}},
+    {id:'sm4',type:'action',name:'Marcar origem',body:'Adicionar tag story_mention',x:1080,y:150,config:{action:'add_tag',tag:'story_mention'}}
+  ],edges:[{id:'sme0',from:'sm1',to:'sm0'},{id:'sme1',from:'sm0',to:'sm2'},{id:'sme2',from:'sm2',to:'sm3'},{id:'sme3',from:'sm3',to:'sm4'}]}},
   {id:'instagram-default-reply',name:'Resposta padrão do Instagram',channel:'Instagram',description:'Fallback quando nenhuma automação mais específica corresponde. Pode responder sempre ou uma vez por 24 horas.',flow:{nodes:[
     {id:'dr1',type:'trigger',name:'Resposta padrão',body:'Quando chegar uma DM sem outro fluxo correspondente',x:80,y:150,config:{triggerType:'instagram_default_reply',dmOnly:true,oncePer24h:true,anyMessage:true}},
-    {id:'dr2',type:'message',name:'Resposta padrão',body:'Olá! Obrigada pela mensagem. Me conte em uma frase como posso te ajudar.',x:390,y:150,config:{}},
+    {id:'dr2',type:'message',name:'Resposta padrão',body:'Olá! Obrigada pela mensagem. Como posso te ajudar?',x:390,y:150,config:{quickReplies:[{title:'Agendar consulta',payload:'AGENDAR'},{title:'Ver valores',payload:'VALORES'},{title:'Falar com equipe',payload:'EQUIPE'}]}},
     {id:'dr3',type:'action',name:'Marcar origem',body:'Adicionar tag default_reply',x:730,y:150,config:{action:'add_tag',tag:'default_reply'}}
   ],edges:[{id:'dre1',from:'dr1',to:'dr2'},{id:'dre2',from:'dr2',to:'dr3'}]}},
   {id:'instagram-live-comments',name:'Comentários da Live → private reply',channel:'Instagram',description:'Detecta comentários durante uma Live e envia uma private reply enquanto a transmissão está ativa.',flow:{nodes:[
