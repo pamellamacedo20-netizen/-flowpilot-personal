@@ -12,3 +12,6 @@ if (String(process.env.INSTAGRAM_LOGIN_MODE || '').toLowerCase() === 'unified') 
     process.env.INSTAGRAM_APP_SECRET = process.env.META_APP_SECRET;
   }
 }
+
+// Keep optional UI/API extensions isolated from the main server.
+require('./media-picker-preload');
