@@ -3,6 +3,35 @@ const {contextFor,interpolate}=require('./templating');
 const {executeHttpAction}=require('./http-action');
 const {enrollSequence}=require('./sequences');
 
+function normalizeMatchText(v=''){return String(v).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().trim()}
+function escapeRegex(v=''){return String(v).replace(/[.*+?^${}()|[\]\\]/g,'\\$&')}
+function keywordMatches(text,keyword,mode='contains'){
+  const hay=normalizeMatchText(text),needle=normalizeMatchText(keyword);if(!needle)return false;
+  if(mode==='exact')return hay===needle;
+  if(mode==='starts_with'||mode==='startsWith')return hay.startsWith(needle);
+  if(mode==='full_word'||mode==='fullWord')return new RegExp(`(^|[^a-z0-9])${escapeRegex(needle)}(?=$|[^a-z0-9])`,'i').test(hay);
+  return hay.includes(needle);
+}
+function triggerTextMatches(c,event){
+  const text=String(event.text||''),mode=c.keywordMatch||'contains';
+  const excluded=Array.isArray(c.excludeKeywords)?c.excludeKeywords:[];
+  if(excluded.some(k=>keywordMatches(text,k,c.excludeKeywordMatch||mode)))return false;
+  if(c.anyComment===true||c.anyMessage===true)return true;
+  const keywords=Array.isArray(c.keywords)?c.keywords:[];
+  if(keywords.length&&!keywords.some(k=>keywordMatches(text,k,mode)))return false;
+  return true;
+}
+function triggerScopeMatches(c,event){
+  if(!['instagram_comment','instagram_live_comment'].includes(event.type))return true;
+  const scope=c.mediaScope||'all';if(scope==='all'||!scope)return true;
+  const mediaId=String(event.mediaId||event.metadata?.mediaId||'');
+  if(scope==='specific'){
+    const ids=[...(Array.isArray(c.mediaIds)?c.mediaIds:[]),c.mediaId].filter(Boolean).map(String);
+    return !!mediaId&&ids.includes(mediaId);
+  }
+  if(scope==='next')return !!c.boundMediaId&&mediaId===String(c.boundMediaId);
+  return true;
+}
 function matchesTrigger(node,event){
   const c=node.config||{}; if(node.type!=='trigger')return false;
   if(c.triggerType==='ai_intent'){
@@ -11,8 +40,8 @@ function matchesTrigger(node,event){
     return event.intent!=='unknown';
   }
   if(c.triggerType&&c.triggerType!==event.type)return false;
-  if(Array.isArray(c.keywords)&&c.keywords.length){const text=String(event.text||'').toLowerCase();if(!c.keywords.some(k=>c.keywordMatch==='exact'?text.trim()===String(k).trim().toLowerCase():text.includes(String(k).toLowerCase())))return false}
-  return true;
+  if(!triggerScopeMatches(c,event))return false;
+  return triggerTextMatches(c,event);
 }
 function delayMs(node){const c=node.config||{};if(Number.isFinite(Number(c.delayMs)))return Math.max(0,Number(c.delayMs));const body=String(node.body||'').toLowerCase();const m=body.match(/(\d+)\s*(minuto|minutos|min|hora|horas|h|segundo|segundos|s)/);if(!m)return 3600000;const n=Number(m[1]);return /(hora|horas|h)/.test(m[2])?n*3600000:/(minuto|minutos|min)/.test(m[2])?n*60000:n*1000}
 function enrichIntent(flow,event){
@@ -68,4 +97,4 @@ async function executeMatchingFlows({store,workspaceId,state,event,enqueueDelive
   const results=[];for(const flow of flowsForState(state)){if(!flow.live)continue;const probe={...event};enrichIntent(flow,probe);const trigger=(flow.nodes||[]).find(n=>matchesTrigger(n,probe));if(!trigger)continue;const result=await executeFlow({store,workspaceId,state,event:probe,enqueueDelivery,httpFetch,flow});if(result.matched)results.push(result)}
   const first=results[0]||null;return{matched:results.length>0,runs:results,matchedCount:results.length,intent:first?.intent||event.intent||null,flowId:first?.flowId||null,steps:first?.steps||[],completed:first?.completed||false};
 }
-module.exports={matchesTrigger,executeFlow,executeMatchingFlows,flowsForState,delayMs,enrichIntent,executeAction,recordConversion};
+module.exports={matchesTrigger,executeFlow,executeMatchingFlows,flowsForState,delayMs,enrichIntent,executeAction,recordConversion,keywordMatches,triggerTextMatches,triggerScopeMatches};
