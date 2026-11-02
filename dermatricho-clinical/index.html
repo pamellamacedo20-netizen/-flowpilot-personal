@@ -24,7 +24,7 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <div class="eyebrow" id="pageEyebrow">Biblioteca clínica</div>
+          <div id="pageEyebrow" class="eyebrow">Biblioteca clínica</div>
           <h1 id="pageTitle">Dermatologia + Tricologia</h1>
         </div>
         <button id="aiButton" class="ai-button">IA clínica</button>
@@ -39,7 +39,7 @@
         <div class="list-panel">
           <div class="section-head">
             <div>
-              <span class="eyebrow" id="listEyebrow">Conteúdos</span>
+              <span id="listEyebrow" class="eyebrow">Conteúdos</span>
               <h2 id="listTitle">Todas as doenças</h2>
             </div>
             <span id="resultCount" class="count"></span>
@@ -67,7 +67,7 @@
         </div>
         <button class="icon-btn" value="cancel" aria-label="Fechar">×</button>
       </div>
-      <p id="aiContext">Selecione uma doença ou medicamento para gerar um resumo contextual.</p>
+      <p id="aiContext">Selecione uma doença ou medicamento para gerar um contexto clínico estruturado.</p>
       <textarea id="patientContext" rows="6" placeholder="Cole ou descreva dados clínicos do paciente…"></textarea>
       <div class="dialog-actions">
         <button value="cancel" class="secondary">Cancelar</button>
@@ -79,6 +79,7 @@
 
   <script src="./data.js"></script>
   <script src="./prescriptions.js"></script>
+  <script src="./prescription-details.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
