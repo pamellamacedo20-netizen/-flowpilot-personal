@@ -1,0 +1,13 @@
+.pharmacology-live{background:linear-gradient(180deg,#fff 0%,#FBF7F4 100%)}
+.pharm-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+.pharm-head h4{margin:2px 0 0;color:var(--wine);font-size:15px}
+.pharm-status{border:1px solid var(--line);background:#fff;border-radius:10px;padding:10px 12px;margin:12px 0;font-size:12px;color:var(--muted)}
+.pharm-card{border:1px solid var(--line);background:#fff;border-radius:12px;padding:12px;margin:10px 0;font-size:13px;line-height:1.55}
+.pharm-card>b{display:block;color:var(--wine);margin-bottom:7px}
+.pharm-card p{margin:6px 0 0!important;font-size:12px!important;line-height:1.55!important}
+.pharm-card small{display:block;color:var(--muted);margin-top:4px}
+.pharm-med{padding:8px 0;border-top:1px solid #F0E6E1}.pharm-med:first-of-type{border-top:0}
+.pharm-id{display:inline-block;font-size:9px;background:var(--off);color:var(--wine);border-radius:999px;padding:2px 5px;margin-left:4px}
+.pharm-hit{border-left:3px solid var(--champagne);padding-left:10px;margin-top:10px}
+.pharm-provider-note{margin-top:12px;padding:10px 12px;border-radius:10px;background:#F7F0EC;color:#5C4B4F;font-size:11px;line-height:1.5}
+@media(max-width:620px){.pharm-head{align-items:flex-start;flex-direction:column}.pharm-head .secondary{width:100%}}
