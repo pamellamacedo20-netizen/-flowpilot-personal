@@ -38,6 +38,13 @@ async function sendViaConnection(store,workspaceId,payload,env=process.env){
   await store.incrementUsage(workspaceId,'messages',1);
   return{...result,complianceMode:compliance.mode};
 }
+async function instagramCommentAction(store,workspaceId,payload,kind,env=process.env){
+  const c=await store.getConnection(workspaceId,'instagram',payload.accountId||null);if(!c)throw new Error('instagram_connection_not_found');
+  const billing=await workspaceBilling(store,workspaceId);try{enforce(billing,'messages',1)}catch{return{blocked:true,reason:'plan_limit_exceeded:messages'}}
+  const token=decryptString(c.encryptedAccessToken,env),meta=c.metadata||{},cfg={...env,META_ACCESS_TOKEN:token,INSTAGRAM_ACCOUNT_ID:meta.instagramAccountId||c.providerAccountId};
+  const result=kind==='public'?await instagram.replyToComment(payload.commentId,payload.text,cfg):await instagram.sendPrivateReply(payload.commentId,payload.text,cfg);
+  await store.incrementUsage(workspaceId,'messages',1);await store.audit(workspaceId,null,kind==='public'?'instagram.comment_public_reply':'instagram.comment_private_reply',{commentId:payload.commentId,contactId:payload.contactId||null,isLive:!!payload.isLive});return result;
+}
 async function dispatchBroadcast(store,workspaceId,payload){
   const state=await store.getState(workspaceId),b=(state.broadcasts||[]).find(x=>x.id===payload.broadcastId);if(!b)throw new Error('broadcast_not_found');if(['queued','sent'].includes(b.status))return{alreadyDispatched:true};
   const contacts=resolveSegment(state.contacts||[],b.segment||{});let queued=0,skipped=0;for(const c of contacts){const provider=b.provider||String(b.channel||'').toLowerCase(),to=provider==='whatsapp'?(c.providerUserId||String(c.phone||'').replace(/\D/g,'')):c.providerUserId;if(!to){skipped++;continue}await store.enqueue(workspaceId,'send_message',{provider,to,text:b.message,template:b.template||null,media:b.media||null,contactId:c.id});queued++}
@@ -49,6 +56,8 @@ async function refreshInstagramConnection(store,workspaceId,payload={},env=proce
 }
 async function processJob(store,job){
   if(job.type==='send_message')return sendViaConnection(store,job.workspaceId,job.payload);
+  if(job.type==='instagram_public_reply')return instagramCommentAction(store,job.workspaceId,job.payload,'public');
+  if(job.type==='instagram_private_reply')return instagramCommentAction(store,job.workspaceId,job.payload,'private');
   if(job.type==='process_event'){
     const billing=await workspaceBilling(store,job.workspaceId);try{enforce(billing,'automation_runs',1)}catch{return{blocked:true,reason:'plan_limit_exceeded:automation_runs'}}
     const state=await store.getState(job.workspaceId),result=await executeMatchingFlows({store,workspaceId:job.workspaceId,state,event:job.payload.event});if(result.matchedCount)await store.incrementUsage(job.workspaceId,'automation_runs',result.matchedCount);return result;
@@ -60,4 +69,4 @@ async function processJob(store,job){
   throw new Error(`Unknown job type: ${job.type}`);
 }
 function startWorker(store,{intervalMs=250,enabled=true,metrics=null}={}){if(!enabled)return()=>{};let stopped=false,busy=false;const timer=setInterval(async()=>{if(stopped||busy)return;busy=true;try{for(let i=0;i<10;i++){const job=await store.claimDueJob(new Date());if(!job)break;metrics?.inc('jobs_claimed_total');try{const result=await processJob(store,job);await store.completeJob(job.id,result||null);metrics?.inc('jobs_completed_total');if(result?.blocked)metrics?.inc('jobs_blocked_total')}catch(e){await store.failJob(job.id,e);metrics?.inc('jobs_failed_total')}}}finally{busy=false}},intervalMs);timer.unref?.();return()=>{stopped=true;clearInterval(timer)}}
-module.exports={startWorker,processJob,sendViaConnection,dispatchBroadcast,workspaceBilling,refreshInstagramConnection,instagramRefreshDelay};
+module.exports={startWorker,processJob,sendViaConnection,dispatchBroadcast,workspaceBilling,refreshInstagramConnection,instagramRefreshDelay,instagramCommentAction};

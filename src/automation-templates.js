@@ -5,14 +5,33 @@ const templates=[
     {id:'dm3',type:'action',name:'Marcar atendimento Instagram',body:'Adicionar tag instagram_dm',x:690,y:150,config:{action:'add_tag',tag:'instagram_dm'}},
     {id:'dm4',type:'action',name:'Registrar conversão',body:'Registrar contato atendido pelo Direct',x:990,y:150,config:{action:'mark_conversion',conversionKey:'instagram_dm_atendido'}}
   ],edges:[{id:'dme1',from:'dm1',to:'dm2'},{id:'dme2',from:'dm2',to:'dm3'},{id:'dme3',from:'dm3',to:'dm4'}]}},
-  {id:'comment-to-dm',name:'Comentário → DM',channel:'Instagram',description:'Responde interesse em comentário, qualifica e marca o lead.',flow:{nodes:[
-    {id:'t1',type:'trigger',name:'Comentário com palavra-chave',body:'Quando alguém comentar QUERO',x:80,y:150,config:{triggerType:'instagram_comment',keywords:['quero']}},
-    {id:'t2',type:'message',name:'Abrir conversa',body:'Olá, {{contact.name}}! Vi seu comentário. Posso te fazer uma pergunta rápida?',x:360,y:150,config:{}},
-    {id:'t3',type:'condition',name:'Interesse confirmado?',body:'Ramifique por resposta',x:650,y:150,config:{}},
-    {id:'t4',type:'action',name:'Marcar lead qualificado',body:'Adicionar tag lead quente',x:930,y:75,config:{action:'add_tag',tag:'lead quente'}},
-    {id:'t5',type:'action',name:'Registrar conversão',body:'Registrar conversão de interesse',x:1190,y:75,config:{action:'mark_conversion',conversionKey:'lead_qualificado'}},
-    {id:'t6',type:'message',name:'Encerrar',body:'Sem problema. Quando quiser, estou por aqui.',x:930,y:260,config:{}}
-  ],edges:[{id:'te1',from:'t1',to:'t2'},{id:'te2',from:'t2',to:'t3'},{id:'te3',from:'t3',to:'t4',label:'sim'},{id:'te4',from:'t4',to:'t5'},{id:'te5',from:'t3',to:'t6',label:'não'}]}},
+  {id:'comment-to-dm',name:'Comentário/Reel → resposta pública + DM',channel:'Instagram',description:'Responde publicamente e envia a primeira private reply usando o comment_id. A continuação depende da interação do usuário.',flow:{nodes:[
+    {id:'t1',type:'trigger',name:'Comentário com palavra-chave',body:'Quando alguém comentar QUERO',x:80,y:150,config:{triggerType:'instagram_comment',keywords:['quero'],keywordMatch:'full_word',mediaScope:'all'}},
+    {id:'t2',type:'action',name:'Resposta pública',body:'Te mandei uma mensagem no direct.',x:360,y:80,config:{action:'instagram_public_reply',replies:['Te mandei uma mensagem no direct 😊','Acabei de te enviar os detalhes no direct.','Mensagem enviada no direct ✨']}},
+    {id:'t4',type:'action',name:'Marcar origem',body:'Adicionar tag comentario_instagram',x:650,y:80,config:{action:'add_tag',tag:'comentario_instagram'}},
+    {id:'t3',type:'action',name:'Private reply',body:'Olá! Vi seu comentário e te mandei esta mensagem para continuar por aqui. Toque em responder se quiser que eu te ajude.',x:930,y:150,config:{action:'instagram_private_reply'}}
+  ],edges:[{id:'te1',from:'t1',to:'t2'},{id:'te2',from:'t2',to:'t4'},{id:'te3',from:'t4',to:'t3'}]}},
+  {id:'instagram-story-reply',name:'Resposta ao Story → DM',channel:'Instagram',description:'Inicia uma automação quando alguém responde ou reage a um Story.',flow:{nodes:[
+    {id:'sr1',type:'trigger',name:'Resposta ao Story',body:'Quando alguém responder ao Story',x:80,y:150,config:{triggerType:'instagram_story_reply',storyScope:'all'}},
+    {id:'sr2',type:'message',name:'Responder no Direct',body:'Oi! Vi sua resposta ao Story 😊 Como posso te ajudar?',x:380,y:150,config:{}},
+    {id:'sr3',type:'action',name:'Marcar origem',body:'Adicionar tag story_reply',x:690,y:150,config:{action:'add_tag',tag:'story_reply'}}
+  ],edges:[{id:'sre1',from:'sr1',to:'sr2'},{id:'sre2',from:'sr2',to:'sr3'}]}},
+  {id:'instagram-story-mention',name:'Menção em Story → resposta',channel:'Instagram',description:'Responde a menções públicas em Stories e pode limitar a uma resposta por usuário a cada 24 horas.',flow:{nodes:[
+    {id:'sm1',type:'trigger',name:'Menção em Story',body:'Quando alguém mencionar seu perfil em um Story público',x:80,y:150,config:{triggerType:'instagram_story_mention',oncePer24h:true}},
+    {id:'sm2',type:'delay',name:'Atraso natural',body:'30 segundos',x:360,y:150,config:{delayMs:30000}},
+    {id:'sm3',type:'message',name:'Agradecer menção',body:'Obrigada por me mencionar no seu Story! 💛',x:650,y:150,config:{}},
+    {id:'sm4',type:'action',name:'Marcar origem',body:'Adicionar tag story_mention',x:930,y:150,config:{action:'add_tag',tag:'story_mention'}}
+  ],edges:[{id:'sme1',from:'sm1',to:'sm2'},{id:'sme2',from:'sm2',to:'sm3'},{id:'sme3',from:'sm3',to:'sm4'}]}},
+  {id:'instagram-default-reply',name:'Resposta padrão do Instagram',channel:'Instagram',description:'Fallback quando nenhuma automação mais específica corresponde. Pode responder sempre ou uma vez por 24 horas.',flow:{nodes:[
+    {id:'dr1',type:'trigger',name:'Resposta padrão',body:'Quando chegar uma DM sem outro fluxo correspondente',x:80,y:150,config:{triggerType:'instagram_default_reply',dmOnly:true,oncePer24h:true,anyMessage:true}},
+    {id:'dr2',type:'message',name:'Resposta padrão',body:'Olá! Obrigada pela mensagem. Me conte em uma frase como posso te ajudar.',x:390,y:150,config:{}},
+    {id:'dr3',type:'action',name:'Marcar origem',body:'Adicionar tag default_reply',x:730,y:150,config:{action:'add_tag',tag:'default_reply'}}
+  ],edges:[{id:'dre1',from:'dr1',to:'dr2'},{id:'dre2',from:'dr2',to:'dr3'}]}},
+  {id:'instagram-live-comments',name:'Comentários da Live → private reply',channel:'Instagram',description:'Detecta comentários durante uma Live e envia uma private reply enquanto a transmissão está ativa.',flow:{nodes:[
+    {id:'lc1',type:'trigger',name:'Comentário na Live',body:'Quando alguém comentar QUERO durante a Live',x:80,y:150,config:{triggerType:'instagram_live_comment',keywords:['quero'],keywordMatch:'full_word'}},
+    {id:'lc3',type:'action',name:'Marcar origem',body:'Adicionar tag live_instagram',x:390,y:100,config:{action:'add_tag',tag:'live_instagram'}},
+    {id:'lc2',type:'action',name:'Private reply da Live',body:'Oi! Vi seu comentário na Live. Responda esta mensagem e eu continuo por aqui com você.',x:700,y:150,config:{action:'instagram_private_reply'}}
+  ],edges:[{id:'lce1',from:'lc1',to:'lc3'},{id:'lce2',from:'lc3',to:'lc2'}]}},
   {id:'lead-qualification-ai',name:'Qualificação com IA',channel:'Instagram',description:'Detecta intenção, salva campo personalizado e marca conversão.',flow:{nodes:[
     {id:'q1',type:'trigger',name:'Intenção de orçamento',body:'Detectar intenção comercial',x:80,y:150,config:{triggerType:'ai_intent',threshold:1,intentDefinitions:[{name:'orcamento',examples:['quanto custa','valor','preço','orçamento']},{name:'duvida',examples:['como funciona','tenho dúvida']}] ,intents:['orcamento']}},
     {id:'q2',type:'ai',name:'Responder e qualificar',body:'Resposta curta orientada por contexto',x:370,y:150,config:{prompt:'Responda de forma objetiva a {{text}} e faça uma pergunta de qualificação.',fallbackText:'Posso te explicar os valores e entender qual opção faz mais sentido para você.',sendReply:true}},
