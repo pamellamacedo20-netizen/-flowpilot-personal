@@ -6,7 +6,7 @@ export default function ForgotPassword(){
  async function submit(e:FormEvent<HTMLFormElement>){
    e.preventDefault();setMsg('');setSending(true);
    const email=String(new FormData(e.currentTarget).get('email')||'').trim();
-   const origin=window.location.origin;
+   const origin=process.env.NEXT_PUBLIC_SITE_URL||window.location.origin;
    const {error}=await createClient().auth.resetPasswordForEmail(email,{redirectTo:`${origin}/auth/confirm?next=/account/update-password`});
    setSending(false);
    setMsg(error?`Não foi possível enviar: ${error.message}`:'Enviamos o link. Abra o e-mail neste mesmo navegador e toque em “Redefinir senha”.');
