@@ -14,6 +14,7 @@
         <button class="nav-btn active" data-view="home">Início</button>
         <button class="nav-btn" data-view="dermatology">Dermatologia</button>
         <button class="nav-btn" data-view="trichology">Tricologia</button>
+        <button class="nav-btn" data-view="prescriptions">Guia de prescrição</button>
         <button class="nav-btn" data-view="favorites">Favoritos</button>
         <button class="nav-btn" data-view="recent">Recentes</button>
       </nav>
@@ -23,8 +24,8 @@
     <main class="main">
       <header class="topbar">
         <div>
-          <div class="eyebrow">Biblioteca clínica</div>
-          <h1>Dermatologia + Tricologia</h1>
+          <div class="eyebrow" id="pageEyebrow">Biblioteca clínica</div>
+          <h1 id="pageTitle">Dermatologia + Tricologia</h1>
         </div>
         <button id="aiButton" class="ai-button">IA clínica</button>
       </header>
@@ -38,7 +39,7 @@
         <div class="list-panel">
           <div class="section-head">
             <div>
-              <span class="eyebrow">Conteúdos</span>
+              <span class="eyebrow" id="listEyebrow">Conteúdos</span>
               <h2 id="listTitle">Todas as doenças</h2>
             </div>
             <span id="resultCount" class="count"></span>
@@ -62,11 +63,11 @@
       <div class="section-head">
         <div>
           <span class="eyebrow">IA clínica</span>
-          <h2>Usar condição no contexto do paciente</h2>
+          <h2>Usar conteúdo no contexto do paciente</h2>
         </div>
         <button class="icon-btn" value="cancel" aria-label="Fechar">×</button>
       </div>
-      <p id="aiContext">Selecione uma doença para gerar um resumo contextual.</p>
+      <p id="aiContext">Selecione uma doença ou medicamento para gerar um resumo contextual.</p>
       <textarea id="patientContext" rows="6" placeholder="Cole ou descreva dados clínicos do paciente…"></textarea>
       <div class="dialog-actions">
         <button value="cancel" class="secondary">Cancelar</button>
@@ -77,6 +78,7 @@
   </dialog>
 
   <script src="./data.js"></script>
+  <script src="./prescriptions.js"></script>
   <script src="./app.js"></script>
 </body>
 </html>
