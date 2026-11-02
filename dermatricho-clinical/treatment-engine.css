@@ -1,0 +1,24 @@
+.treatment-accordion{background:linear-gradient(180deg,#fff 0%,#FCF9F7 100%)}
+.treatment-root{display:grid;gap:14px}
+.tx-await{border:1px dashed var(--champagne);background:#FCF8F5;border-radius:14px;padding:16px;color:var(--muted)}
+.tx-await strong{display:block;color:var(--wine);margin-bottom:5px}
+.tx-await p{margin:0!important;font-size:13px!important;line-height:1.55!important}
+.tx-head{border:1px solid #E7D8CF;background:var(--off);border-radius:14px;padding:15px}
+.tx-kicker,.tx-label{display:block;text-transform:uppercase;letter-spacing:.12em;font-size:9px;font-weight:800;color:var(--wine);margin-bottom:7px}
+.tx-head h4{font-family:Georgia,serif;font-size:21px;font-weight:500;color:var(--wine);margin:0 0 7px}
+.tx-head p{margin:0!important;color:#5D5355!important;font-size:13px!important;line-height:1.55!important}
+.tx-block{border:1px solid var(--line);background:#fff;border-radius:14px;padding:14px}
+.tx-block ol,.tx-warning ul{margin:0;padding-left:20px;display:grid;gap:7px}
+.tx-block li,.tx-warning li{font-size:13.5px;line-height:1.6;color:#433C3D}
+.tx-rx-list{display:grid;gap:8px}
+.tx-rx{border:1px solid var(--line);background:#fff;border-radius:12px;padding:11px 12px;text-align:left;display:flex;align-items:center;justify-content:space-between;gap:12px;color:var(--wine)}
+.tx-rx:hover{border-color:var(--champagne);background:#FCF8F5}
+.tx-rx span{font-weight:700;font-size:13px}
+.tx-rx small{font-size:10px;color:var(--muted);text-align:right}
+.tx-warning{border-left:3px solid var(--danger);background:#FFF8F7;border-radius:0 12px 12px 0;padding:13px 14px}
+.tx-warning .tx-label{color:var(--danger)}
+.tx-muted{font-size:12px!important;color:var(--muted)!important;margin:0!important}
+.tx-actions{display:flex;justify-content:flex-start}
+.tx-use{font-size:12px;padding:10px 14px}
+.tx-source{font-size:10.5px!important;line-height:1.5!important;color:var(--muted)!important;margin:0!important;border-top:1px solid var(--line);padding-top:10px}
+@media(max-width:620px){.tx-rx{align-items:flex-start;flex-direction:column}.tx-rx small{text-align:left}.tx-head h4{font-size:19px}}
