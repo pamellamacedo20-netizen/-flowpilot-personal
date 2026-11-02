@@ -83,7 +83,12 @@ test('Instagram provider sends private reply with comment_id recipient and publi
   }finally{global.fetch=old}
 });
 
-test('comment-to-DM template stops at private reply until user interacts',()=>{
-  const t=getTemplate('comment-to-dm'),privateNode=t.flow.nodes.find(n=>n.config?.action==='instagram_private_reply');
-  assert.ok(privateNode);assert.equal(t.flow.edges.some(e=>e.from===privateNode.id),false);
+test('comment-to-DM template tags origin before terminal private reply',()=>{
+  const t=getTemplate('comment-to-dm'),privateNode=t.flow.nodes.find(n=>n.config?.action==='instagram_private_reply'),tagNode=t.flow.nodes.find(n=>n.config?.tag==='comentario_instagram');
+  assert.ok(privateNode);assert.ok(tagNode);assert.equal(t.flow.edges.some(e=>e.from===privateNode.id),false);assert.equal(t.flow.edges.some(e=>e.from===tagNode.id&&e.to===privateNode.id),true);
+});
+
+test('live comments template tags origin before terminal private reply',()=>{
+  const t=getTemplate('instagram-live-comments'),privateNode=t.flow.nodes.find(n=>n.config?.action==='instagram_private_reply'),tagNode=t.flow.nodes.find(n=>n.config?.tag==='live_instagram');
+  assert.ok(privateNode);assert.ok(tagNode);assert.equal(t.flow.edges.some(e=>e.from===privateNode.id),false);assert.equal(t.flow.edges.some(e=>e.from===tagNode.id&&e.to===privateNode.id),true);
 });
