@@ -1,0 +1,26 @@
+name: GraftMap portable tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [graftmap-ios-ci-run]
+    paths:
+      - 'ios_ci/**'
+      - '.github/workflows/graftmap-portable-tests.yml'
+
+jobs:
+  planning-math:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate planning formulas
+        run: python3 ios_ci/test_planning_math.py
+      - name: Validate archived Swift source payload
+        run: |
+          test -s ios_ci/graftmap097-app.tar.gz.b64
+          mkdir -p /tmp/graftmap
+          base64 --decode ios_ci/graftmap097-app.tar.gz.b64 > /tmp/graftmap/app.tar.gz
+          tar -tzf /tmp/graftmap/app.tar.gz >/tmp/graftmap/files.txt
+          grep -q 'App/SafePlanningView.swift' /tmp/graftmap/files.txt
+          grep -q 'App/RootView.swift' /tmp/graftmap/files.txt
