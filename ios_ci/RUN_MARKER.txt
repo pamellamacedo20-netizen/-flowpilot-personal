@@ -1,1 +1,1 @@
-Portable GraftMap validation staged for the private iPad app. Activation commit ready.
+Portable GraftMap validation staged for the private iPad app.
