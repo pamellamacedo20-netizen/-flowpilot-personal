@@ -1,1 +1,1 @@
-Portable GraftMap validation staged for the private iPad app. Final branch activation required.
+Portable GraftMap validation staged for the private iPad app. Move branch now.
