@@ -1,0 +1,1 @@
+Portable validation enabled. Apple CI remains an additional gate; private iPad development can continue incrementally from the frozen v0.9.4 baseline.
