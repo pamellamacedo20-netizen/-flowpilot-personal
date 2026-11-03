@@ -1,2 +1,2 @@
 Trigger portable validation workflow for the private GraftMap iPad project.
-Portable tests prepared and awaiting branch move.
+Portable tests prepared; branch move is the only remaining activation step.
