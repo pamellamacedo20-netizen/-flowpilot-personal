@@ -9,8 +9,8 @@ def _nonnegative(name, value):
 def precise(cma_cm2, pma_cm2, hmi_percent, temple_score):
     _nonnegative('CMA', cma_cm2)
     _nonnegative('PMA', pma_cm2)
-    if not 0 <= hmi_percent <= 100:
-        raise ValueError('HMI must be between 0 and 100')
+    if hmi_percent not in (30, 50, 70, 90):
+        raise ValueError('HMI must be one of 30, 50, 70 or 90')
     _nonnegative('temple score', temple_score)
     rba = cma_cm2 + (hmi_percent / 100.0) * pma_cm2
     score = rba / 30.0 + temple_score
@@ -46,13 +46,15 @@ def test_precise_reference():
     assert math.isclose(fu, 4500)
 
 
-def test_hmi_extremes():
-    assert math.isclose(precise(10, 100, 0, 0)[0], 10)
-    assert math.isclose(precise(10, 100, 100, 0)[0], 110)
+def test_hmi_options():
+    assert math.isclose(precise(10, 100, 30, 0)[0], 40)
+    assert math.isclose(precise(10, 100, 50, 0)[0], 60)
+    assert math.isclose(precise(10, 100, 70, 0)[0], 80)
+    assert math.isclose(precise(10, 100, 90, 0)[0], 100)
 
 
 def test_zero_case():
-    assert precise(0, 0, 0, 0) == (0, 0, 0)
+    assert precise(0, 0, 30, 0) == (0, 0, 0)
     assert donor_capacity([(0, 0, 0)]) == 0
 
 
@@ -74,8 +76,8 @@ def test_plan_without_donor_limit():
 def test_invalid_ranges_rejected():
     bad_calls = [
         lambda: precise(-1, 10, 50, 0),
-        lambda: precise(10, 10, -1, 0),
-        lambda: precise(10, 10, 101, 0),
+        lambda: precise(10, 10, 0, 0),
+        lambda: precise(10, 10, 100, 0),
         lambda: donor_capacity([(10, 60, -1)]),
         lambda: donor_capacity([(10, 60, 101)]),
         lambda: planned_fu(10, 10, 30, 30, 1000, -1),
