@@ -17,7 +17,8 @@
     {key:'overview',label:'Visão geral',terms:['definição e contexto clínico','apresentação clínica','fatores de risco']},
     {key:'diagnosis',label:'Diagnóstico',terms:['como confirmar o diagnóstico','diagnósticos diferenciais','exames e investigação','tricoscopia','exame dermatológico']},
     {key:'severity',label:'Score / classificação',terms:['avaliar gravidade / classificação','gravidade / classificação']},
-    {key:'treatment',label:'Tratamento completo',terms:['tratamento completo','abordagem terapêutica','conduta orientada pela gravidade']},
+    {key:'flow',label:'Fluxograma',terms:['fluxograma clínico']},
+    {key:'treatment',label:'Tratamento completo',terms:['tratamento completo','abordagem terapêutica','conduta orientada pela gravidade','conduta curada']},
     {key:'prescription',label:'Prescrição',terms:['prescrição prática no consultório','prescrição / conduta editável']},
     {key:'safety',label:'Segurança',terms:['alertas e contraindicações','situações especiais e individualização']},
     {key:'followup',label:'Seguimento',terms:['acompanhamento e reavaliação','prognóstico e objetivos terapêuticos']},
@@ -112,7 +113,7 @@
     }
     const map = targetMap();
     const actions = info.type === 'disease' ? [
-      ['treatment','Tratamento completo'],['prescription','Prescrever'],['severity','Score / classificação'],['notes','Anotações'],['references','Referências']
+      ['flow','Fluxograma'],['treatment','Tratamento completo'],['prescription','Prescrever'],['severity','Score / classificação'],['notes','Anotações'],['references','Referências']
     ] : [
       ['prescription','Modelo de receita'],['safety','Segurança'],['notes','Anotações'],['references','Referências']
     ];
