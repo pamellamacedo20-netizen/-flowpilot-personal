@@ -1,7 +1,17 @@
 import math
 
 
+def _nonnegative(name, value):
+    if value < 0:
+        raise ValueError(f'{name} must be nonnegative')
+
+
 def precise(cma_cm2, pma_cm2, hmi_percent, temple_score):
+    _nonnegative('CMA', cma_cm2)
+    _nonnegative('PMA', pma_cm2)
+    if not 0 <= hmi_percent <= 100:
+        raise ValueError('HMI must be between 0 and 100')
+    _nonnegative('temple score', temple_score)
     rba = cma_cm2 + (hmi_percent / 100.0) * pma_cm2
     score = rba / 30.0 + temple_score
     return rba, score, score * 1500.0
@@ -10,17 +20,23 @@ def precise(cma_cm2, pma_cm2, hmi_percent, temple_score):
 def donor_capacity(regions):
     total = 0.0
     for area_cm2, density_fu_cm2, extraction_percent in regions:
-        assert area_cm2 >= 0
-        assert density_fu_cm2 >= 0
-        assert 0 <= extraction_percent <= 100
+        _nonnegative('donor area', area_cm2)
+        _nonnegative('donor density', density_fu_cm2)
+        if not 0 <= extraction_percent <= 100:
+            raise ValueError('extraction percentage must be between 0 and 100')
         total += area_cm2 * density_fu_cm2 * extraction_percent / 100.0
     return total
 
 
 def planned_fu(cma_cm2, pma_cm2, density_cma, density_pma, precise_reference_fu, safe_donor_fu=None):
+    for name, value in [('CMA', cma_cm2), ('PMA', pma_cm2), ('CMA density', density_cma), ('PMA density', density_pma), ('PRECISE reference', precise_reference_fu)]:
+        _nonnegative(name, value)
     density_target = cma_cm2 * density_cma + pma_cm2 * density_pma
     requested = max(density_target, precise_reference_fu)
-    return min(requested, safe_donor_fu) if safe_donor_fu is not None else requested
+    if safe_donor_fu is not None:
+        _nonnegative('safe donor capacity', safe_donor_fu)
+        requested = min(requested, safe_donor_fu)
+    return requested
 
 
 def test_precise_reference():
@@ -52,18 +68,24 @@ def test_plan_limited_by_donor():
 
 def test_plan_without_donor_limit():
     _, _, reference = precise(30, 60, 50, 1)
-    # Density target = 3000; PRECISE reference = 4500.
     assert planned_fu(30, 60, 40, 30, reference) == 4500
 
 
-def test_invalid_extraction_rejected():
-    for bad in (-1, 101):
+def test_invalid_ranges_rejected():
+    bad_calls = [
+        lambda: precise(-1, 10, 50, 0),
+        lambda: precise(10, 10, -1, 0),
+        lambda: precise(10, 10, 101, 0),
+        lambda: donor_capacity([(10, 60, -1)]),
+        lambda: donor_capacity([(10, 60, 101)]),
+        lambda: planned_fu(10, 10, 30, 30, 1000, -1),
+    ]
+    for call in bad_calls:
         try:
-            donor_capacity([(10, 60, bad)])
-            raise AssertionError('invalid extraction percentage accepted')
-        except AssertionError as exc:
-            if str(exc) == 'invalid extraction percentage accepted':
-                raise
+            call()
+        except ValueError:
+            continue
+        raise AssertionError('invalid input accepted')
 
 
 if __name__ == '__main__':
