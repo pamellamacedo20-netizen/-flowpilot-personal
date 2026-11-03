@@ -1,1 +1,1 @@
-Portable GraftMap validation staged for the private iPad app. Activation: move graftmap-ios-ci-run to this commit.
+Portable GraftMap validation staged for the private iPad app. Activation commit ready.
