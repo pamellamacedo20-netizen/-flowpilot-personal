@@ -1,2 +1,2 @@
 Trigger portable validation workflow for the private GraftMap iPad project.
-Ready.
+Ready for branch ref update.
