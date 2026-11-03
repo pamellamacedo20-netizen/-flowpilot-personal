@@ -10,7 +10,8 @@ on:
 
 jobs:
   typecheck:
-    runs-on: macos-latest
+    runs-on: macos-15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - name: Extract app sources
@@ -18,6 +19,11 @@ jobs:
           mkdir -p /tmp/graftmap
           base64 --decode ios_ci/graftmap097-app.tar.gz.b64 > /tmp/graftmap/app.tar.gz
           tar -xzf /tmp/graftmap/app.tar.gz -C /tmp/graftmap
+      - name: Show Apple toolchain
+        run: |
+          xcodebuild -version
+          swift --version
+          xcrun --sdk iphonesimulator --show-sdk-path
       - name: Typecheck against iOS Simulator SDK
         run: |
           SDK=$(xcrun --sdk iphonesimulator --show-sdk-path)
