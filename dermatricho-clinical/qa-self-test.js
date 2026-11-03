@@ -12,10 +12,12 @@
     push('Guia de procedimentos disponível',Array.isArray(window.DT_PROCEDURES)&&window.DT_PROCEDURES.length>0,`${window.DT_PROCEDURES?.length||0} procedimento(s)`);
     push('Registro de evidências disponível',!!window.DT_EVIDENCE_REGISTRY,'DT_EVIDENCE_REGISTRY');
     push('Pivôs de decisão disponíveis',!!window.DT_DECISION_PIVOTS,`${Object.keys(window.DT_DECISION_PIVOTS||{}).length} doença(s) com pivôs`);
+    push('Módulo de exposições especiais disponível',!!window.DT_SPECIAL_EXPOSURES,`${Object.keys(window.DT_SPECIAL_EXPOSURES||{}).length} contexto(s)`);
     push('Sem IDs duplicados',duplicateIds().length===0,duplicateIds().join(', ')||'nenhum');
     push('Dialog IA presente',!!document.querySelector('#aiDialog'),'#aiDialog');
     push('Dialog de receita presente',!!document.querySelector('#rxCartDialog'),'#rxCartDialog');
     push('Dialog de procedimentos presente',!!document.querySelector('#procedureDialog'),'#procedureDialog');
+    push('Dialog de exposições presente',!!document.querySelector('#specialExposureDialog'),'#specialExposureDialog');
     const visibleDisabled=[...document.querySelectorAll('button:disabled')].filter(x=>x.offsetParent!==null);
     push('Sem botões desabilitados visíveis',visibleDisabled.length===0,visibleDisabled.map(x=>x.textContent.trim()).join(' | ')||'nenhum',visibleDisabled.length?'warn':'ok');
     const brokenLinks=[...document.querySelectorAll('a')].filter(a=>!a.getAttribute('href')||a.getAttribute('href')==='#');
@@ -46,6 +48,6 @@
     b.addEventListener('click',()=>renderReport(audit()));
   }
   window.DT_QA={run:audit,show(){renderReport(audit())},last(){try{return JSON.parse(localStorage.getItem('dt-last-qa-report-v1')||'null')}catch{return null}}};
-  setTimeout(()=>{audit();ensureDebugButton();},450);
+  setTimeout(()=>{audit();ensureDebugButton();},550);
   new MutationObserver(()=>ensureDebugButton()).observe(document.body,{childList:true,subtree:true});
 })();
