@@ -57,6 +57,7 @@
     const result=[{level:'caution',text:rules[id]}];
     const preg=['possible','trying','pregnant'].includes(p.pregnancy);
     if(teratogens.has(id)&&preg)result.push({level:'block',text:'Uso para indicação dermatológica bloqueado diante de gestação/tentativa/possibilidade. Rever contraindicação e plano reprodutivo.'});
+    if((teratogens.has(id)||avoidGestation.has(id))&&p.pregtest==='positive')result.push({level:'block',text:'Teste de gestação positivo: não liberar fármaco dermatológico com risco reprodutivo neste fluxo.'});
     if(avoidGestation.has(id)&&preg)result.push({level:'block',text:'Gestação/tentativa/possibilidade: não liberar esta opção dermatológica sem revisar contraindicação e alternativa.'});
     if(teratogens.has(id)&&p.sex==='female'&&p.pregnancy==='no'&&(!p.contraception||['unknown','no'].includes(p.contraception)))
       result.push({level:'incomplete',text:'Medicamento com risco fetal: registrar situação reprodutiva e plano de prevenção de gestação conforme bula local.'});
