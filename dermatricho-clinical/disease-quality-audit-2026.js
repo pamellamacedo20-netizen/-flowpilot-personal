@@ -26,7 +26,9 @@
       if(d.area==='Tricologia'&&!filled(d.trichoscopy))gaps.push('Sem tricoscopia estruturada');
       const sourceLevel=Array.isArray(ev)&&ev.some(x=>['A','B'].includes(x.quality))?'A/B':Array.isArray(ev)&&ev.some(x=>x.quality==='C')?'C':'não qualificado';
       const deeper=expandedNames.has(d.name);
-      return {id:d.id,name:d.name,area:d.area,structural:!gaps.length,gaps,evidence:ev.length,pivots:branches.length,sourceLevel,depth:deeper?'síntese integrada (revisão farmacológica ainda indicada)':'compêndio clínico histórico; verificar monografia item a item'};
+      const protocol=window.DT_EXPANDED_TREATMENT_PROTOCOLS?.[d.name];
+      if(deeper&&!protocol)gaps.push('Protocolo de tratamento aprofundado não carregado');
+      return {id:d.id,name:d.name,area:d.area,structural:!gaps.length,gaps,evidence:ev.length,pivots:branches.length,sourceLevel,depth:deeper?(protocol?'protocolo por cenário (validação farmacológica ainda necessária)':'protocolo não carregado'):'compêndio clínico histórico; verificar monografia item a item'};
     });
     const panel=document.querySelector('#detailPanel');
     const title=panel?.querySelector('.detail-title')?.textContent?.trim();
@@ -35,7 +37,7 @@
     if(current&&expandedNames.has(current.name)&&!panel?.querySelector('[data-dt-recovered-treatment]')){
       const found=rows.find(x=>x.id===current.id);if(found)found.gaps.push('Síntese de tratamento ainda não renderizada nesta ficha');
     }
-    const report={version:'2026-11-06',total:diseases.length,uniqueIds:unique.size,structuralComplete:rows.filter(r=>r.structural).length,missing:rows.filter(r=>r.gaps.length),deeperReview:rows.filter(r=>expandedNames.has(r.name)).map(r=>r.name),rows,at:new Date().toISOString()};
+    const report={version:'2026-11-06',total:diseases.length,uniqueIds:unique.size,structuralComplete:rows.filter(r=>r.structural).length,missing:rows.filter(r=>r.gaps.length),deeperReview:rows.filter(r=>expandedNames.has(r.name)).map(r=>r.name),protocolsByScenario:rows.filter(r=>!!window.DT_EXPANDED_TREATMENT_PROTOCOLS?.[r.name]).length,rows,at:new Date().toISOString()};
     try{localStorage.setItem('dt-disease-quality-report-2026',JSON.stringify(report));}catch{}
     return report;
   }
@@ -44,7 +46,7 @@
     const r=run();
     let d=document.querySelector('#dtClinicalAuditDialog');if(!d){d=document.createElement('dialog');d.id='dtClinicalAuditDialog';d.className='dt-qa-dialog';document.body.appendChild(d);}
     const failures=r.rows.filter(x=>x.gaps.length);
-    d.innerHTML='<div class="dt-qa-shell"><header><div><span class="eyebrow">Auditoria clínica</span><h2>56 fichas — completude de conteúdo</h2><small>'+r.structuralComplete+'/'+r.total+' estruturalmente cobertas · '+r.deeperReview.length+' com aprofundamento adicional indicado</small></div><button type="button" class="icon-btn" data-close-disease-audit>×</button></header><div class="dt-qa-list"><p class="microcopy">Auditoria automatizada dos campos, evidências e pivôs. NÃO comprova exatidão de doses, atualização de bula nem revisão independente de cada frase.</p>'+(failures.length?failures.map(x=>'<div class="dt-qa-row"><b class="dt-qa-fail">!</b><div><strong>'+esc(x.name)+'</strong><p>'+esc(x.gaps.join(' · '))+'</p></div></div>').join(''):'<p>Nenhum campo estrutural obrigatório ausente.</p>')+'<div class="dt-qa-row"><b class="dt-qa-warn">!</b><div><strong>Revisão de profundidade terapêutica</strong><p>As 25 fichas expandidas agora possuem síntese integrada; ainda requerem revisão farmacológica/procedimental específica antes de serem chamadas de monografias completas.</p></div></div></div><footer style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px"><button type="button" class="secondary" data-copy-disease-audit>Copiar relatório</button><button type="button" class="primary" data-close-disease-audit>Fechar</button></footer></div>';
+    d.innerHTML='<div class="dt-qa-shell"><header><div><span class="eyebrow">Auditoria clínica</span><h2>56 fichas — completude de conteúdo</h2><small>'+r.structuralComplete+'/'+r.total+' estruturalmente cobertas · '+r.protocolsByScenario+' protocolos por cenário · farmacologia individual pendente</small></div><button type="button" class="icon-btn" data-close-disease-audit>×</button></header><div class="dt-qa-list"><p class="microcopy">Auditoria automatizada dos campos, evidências e pivôs. NÃO comprova exatidão de doses, atualização de bula nem revisão independente de cada frase.</p>'+(failures.length?failures.map(x=>'<div class="dt-qa-row"><b class="dt-qa-fail">!</b><div><strong>'+esc(x.name)+'</strong><p>'+esc(x.gaps.join(' · '))+'</p></div></div>').join(''):'<p>Nenhum campo estrutural obrigatório ausente.</p>')+'<div class="dt-qa-row"><b class="dt-qa-warn">!</b><div><strong>Revisão de profundidade terapêutica</strong><p>As 25 fichas expandidas ganharam protocolos por cenário, mas doses, apresentações brasileiras e interações ainda exigem revisão farmacológica antes da emissão da prescrição.</p></div></div></div><footer style="display:flex;gap:8px;justify-content:flex-end;padding:14px 20px"><button type="button" class="secondary" data-copy-disease-audit>Copiar relatório</button><button type="button" class="primary" data-close-disease-audit>Fechar</button></footer></div>';
     d.querySelectorAll('[data-close-disease-audit]').forEach(x=>x.addEventListener('click',()=>d.close()));
     d.querySelector('[data-copy-disease-audit]')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(reportText(r));window.DT_UI?.toast?.('Relatório copiado')}catch{window.prompt('Copie o relatório:',reportText(r))}});
     if(!d.open)d.showModal();
