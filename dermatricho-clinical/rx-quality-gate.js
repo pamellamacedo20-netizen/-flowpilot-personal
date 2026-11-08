@@ -38,10 +38,11 @@
     if(!box){box=document.createElement('div');box.dataset.rxQualityGate='1';box.className='rx-quality-gate';const header=panel.querySelector('.detail-header');(header||panel.firstElementChild)?.insertAdjacentElement('afterend',box);}
     if(box.dataset.drug===item.id && box.dataset.state===`${s.percent}-${s.partial}`)return;
     box.dataset.drug=item.id;box.dataset.state=`${s.percent}-${s.partial}`;
-    const status=s.percent===100&&!s.partial?'MONOGRAFIA CURADA':'REVISÃO NECESSÁRIA';
-    const cls=status==='MONOGRAFIA CURADA'?'rx-q-ok':'rx-q-review';
+    const reviewed=item.clinicalReviewed===true && !!item.reviewDate && !!item.reviewSource;
+    const status=reviewed?'REVISÃO FARMACOLÓGICA DOCUMENTADA':s.percent===100&&!s.partial?'ESTRUTURA PREENCHIDA — AUDITAR':'REVISÃO CLÍNICA PENDENTE';
+    const cls=reviewed?'rx-q-ok':'rx-q-review';
     const missing=REQUIRED.filter(k=>!ok(item[k]));
-    box.innerHTML=`<div class="rx-quality-main"><span class="overview-label">Qualidade da monografia</span><strong class="${cls}">${status}</strong><small>${s.base}/${s.total} campos estruturais preenchidos · revisão 03/11/2026</small></div><div class="rx-quality-detail">${s.partial?'<span>Farmacologia profunda ainda parcial: não inferir dose mínima/máxima.</span>':'<span>Faixa de dose/ajustes estruturados disponíveis nesta ficha.</span>'}${missing.length?`<span>Faltando: ${esc(missing.join(', '))}</span>`:''}</div>`;
+    box.innerHTML=`<div class="rx-quality-main"><span class="overview-label">Qualidade da monografia</span><strong class="${cls}">${status}</strong><small>${s.base}/${s.total} campos estruturais preenchidos · auditoria de campos 08/11/2026</small></div><div class="rx-quality-detail">${s.partial?'<span>Farmacologia profunda ainda parcial: não inferir dose mínima/máxima.</span>':'<span>Campos preenchidos não equivalem a revisão clínica independente. Conferir dose, ajuste, interações, evidência e bula local antes de prescrever.</span>'}${missing.length?`<span>Faltando: ${esc(missing.join(', '))}</span>`:''}</div>`;
   }
   let q=false;const queue=()=>{if(q)return;q=true;requestAnimationFrame(()=>{q=false;inject();});};
   new MutationObserver(queue).observe(panel,{childList:true,subtree:true});queue();
