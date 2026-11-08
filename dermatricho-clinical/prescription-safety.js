@@ -182,12 +182,20 @@
       case 'rx-ketoconazole-shampoo': case 'rx-bpo':
         break;
     }
+    if(rx.id==='rx-isotretinoin'&&p.sex==='female'){
+      if(p.pregtest==='positive')a.push(alertItem('block','Teste de gestação positivo: isotretinoína absolutamente contraindicada.'));
+      if(!p.pregtest||p.pregtest==='unknown')a.push(alertItem('incomplete','Isotretinoína: registrar teste de gestação/ausência de potencial reprodutivo conforme protocolo antes da receita.'));
+      if(p.contraception==='no')a.push(alertItem('block','Isotretinoína: não há programa contraceptivo/prevenção gestacional documentado.'));
+      if(!p.contraception||p.contraception==='unknown')a.push(alertItem('incomplete','Isotretinoína: documentar plano de prevenção de gestação ou ausência de potencial reprodutivo.'));
+    }
+    const newChecks=window.DT_DRUG_SAFETY_MATRIX?.evaluate?.(rx,p)||[];
+    a.push(...newChecks);
     return a;
   }
 
   function read(root){
     const get=k=>root.querySelector(`[data-rx-profile="${k}"]`)?.value||'';
-    return {age:get('age'),weight:get('weight'),sex:get('sex'),pregnancy:get('pregnancy'),lactation:get('lactation'),renal:get('renal'),hepatic:get('hepatic'),potassium:get('potassium'),bp:get('bp'),cardiac:get('cardiac'),retinal:get('retinal'),qt:get('qt'),g6pd:get('g6pd'),hbv:get('hbv'),infection:get('infection'),allergies:get('allergies'),meds:get('meds'),comorbidities:get('comorbidities'),dose:get('dose')};
+    return {age:get('age'),weight:get('weight'),sex:get('sex'),pregnancy:get('pregnancy'),lactation:get('lactation'),renal:get('renal'),hepatic:get('hepatic'),potassium:get('potassium'),bp:get('bp'),cardiac:get('cardiac'),retinal:get('retinal'),qt:get('qt'),g6pd:get('g6pd'),hbv:get('hbv'),infection:get('infection'),tb:get('tb'),contraception:get('contraception'),pregtest:get('pregtest'),allergies:get('allergies'),meds:get('meds'),comorbidities:get('comorbidities'),dose:get('dose')};
   }
 
   function profileSummary(p){
@@ -196,7 +204,7 @@
       `Gestação: ${p.pregnancy||'não informada'}`, `Lactação: ${p.lactation||'não informada'}`, `Função renal: ${p.renal||'não informada'}`,
       `Função hepática: ${p.hepatic||'não informada'}`, `Potássio: ${p.potassium||'não informado'}`, `PA: ${p.bp||'não informada'}`,
       `Cardiovascular: ${p.cardiac||'não informado'}`, `Retina/mácula: ${p.retinal||'não informado'}`, `QT/arritmia: ${p.qt||'não informado'}`,
-      `G6PD: ${p.g6pd||'não investigado'} | HBV: ${p.hbv||'não investigado'} | Infecção ativa: ${p.infection||'não investigada'}`,
+      `G6PD: ${p.g6pd||'não investigado'} | HBV: ${p.hbv||'não investigado'} | TB: ${p.tb||'não investigada'} | Infecção ativa: ${p.infection||'não investigada'} | Contracepção: ${p.contraception||'não investigada'} | Gestação (documentação): ${p.pregtest||'não investigada'}`,
       `Alergias: ${p.allergies||'não informadas'}`, `Medicações: ${p.meds||'não informadas'}`, `Comorbidades: ${p.comorbidities||'não informadas'}`,
       p.dose?`Dose planejada: ${p.dose} mg/dia ou mg/dose conforme o medicamento`:''
     ].filter(Boolean).join('\n');
@@ -251,7 +259,10 @@
           ${select('G6PD (para dapsona)','g6pd',[['normal','Normal documentado'],['deficient','Deficiência conhecida'],['unknown','Não investigado']])}
           ${select('Hepatite B / HBsAg e anti-HBc','hbv',[['negative','Triagem negativa documentada'],['positive','HBsAg ou anti-HBc positivo'],['unknown','Não investigado']])}
           ${select('Infecção ativa','infection',[['no','Não / investigada'],['yes','Sim'],['unknown','Não investigada']])}
-          ${field('Dose sistêmica planejada (mg)','dose','number','min="0" step="0.1" placeholder="se aplicável"')}
+          ${select('Triagem de tuberculose','tb',[['negative','Sem TB ativa / rastreio concluído'],['positive','TB ativa/latente ou teste positivo'],['unknown','Não investigada']])}
+          ${select('Plano reprodutivo / contracepção','contraception',[['reviewed','Plano de prevenção documentado'],['na','Sem potencial reprodutivo documentado'],['no','Não há plano seguro'],['unknown','Não investigado']])}
+          ${select('Teste de gestação / condição reprodutiva','pregtest',[['negative','Negativo documentado conforme protocolo'],['na','Sem potencial de gestação documentado'],['positive','Positivo'],['unknown','Não investigado']])}
+                    ${field('Dose sistêmica planejada (mg)','dose','number','min="0" step="0.1" placeholder="se aplicável"')}
         </div>
         <div class="rx-profile-texts">
           <label><span>Alergias</span><textarea data-rx-profile="allergies" rows="2" placeholder="Ex.: nega / tetraciclinas"></textarea></label>
