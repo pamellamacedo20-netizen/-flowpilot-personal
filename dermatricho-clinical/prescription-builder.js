@@ -82,14 +82,14 @@
     if(e.target.closest('[data-open-rx-cart]')){e.preventDefault();open();return;}
     if(e.target.closest('[data-close-rx-cart]')){e.preventDefault();close();return;}
     if(e.target.closest('[data-clear-rx-cart]')){e.preventDefault();clear();return;}
-    if(e.target.closest('[data-copy-rx-cart]')){e.preventDefault();const b=hardBlocks();if(b.length){window.DT_UI?.toast?.('Receita bloqueada: revise as interações/posologia');alert('Não foi possível copiar a receita:\n'+b.join('\n'));return;}navigator.clipboard?.writeText(recipeText());return;}
-    if(e.target.closest('[data-print-rx-cart]')){e.preventDefault();const b=hardBlocks();if(b.length){window.DT_UI?.toast?.('Receita bloqueada: revise as interações/posologia');alert('Não foi possível imprimir a receita:\n'+b.join('\n'));return;}const w=window.open('','_blank');if(!w)return;w.document.write(`<html><head><title>Receita</title><style>body{font-family:Arial,sans-serif;padding:40px;white-space:pre-wrap;line-height:1.6}h1{font-size:20px}</style></head><body><h1>Prescrição</h1>${esc(recipeText()).replace(/\n/g,'<br>')}</body></html>`);w.document.close();w.focus();w.print();return;}
+    if(e.target.closest('[data-copy-rx-cart]')){e.preventDefault();e.stopImmediatePropagation();const b=hardBlocks();if(b.length){window.DT_UI?.notify?.('Receita bloqueada: revise os riscos.','warning');alert('Não foi possível copiar a receita:\\n'+b.join('\\n'));return;}const text=recipeText();if(window.DT_UI?.copyText){window.DT_UI.copyText(text,'Receita copiada.');}else if(text){window.prompt('Copie a receita:',text);}return;}
+    if(e.target.closest('[data-print-rx-cart]')){e.preventDefault();e.stopImmediatePropagation();const b=hardBlocks();if(b.length){window.DT_UI?.notify?.('Receita bloqueada: revise as interações/posologia');alert('Não foi possível imprimir a receita:\n'+b.join('\n'));return;}const w=window.open('','_blank');if(!w)return;w.document.write(`<html><head><title>Receita</title><style>body{font-family:Arial,sans-serif;padding:40px;white-space:pre-wrap;line-height:1.6}h1{font-size:20px}</style></head><body><h1>Prescrição</h1>${esc(recipeText()).replace(/\n/g,'<br>')}</body></html>`);w.document.close();w.focus();w.print();return;}
     const btn=e.target.closest('#useRxInPatient');
     if(btn){
       const title=document.querySelector('#detailPanel .detail-title')?.textContent?.trim(); const rx=prescriptions().find(x=>x.name===title);
       if(!rx)return;
       const safety=window.DT_RX_SAFETY_LAST;
-      if(!safety || safety.drug!==rx.name || !safety.canRelease){e.preventDefault();e.stopImmediatePropagation();window.DT_UI?.toast?.('Complete e confirme a triagem do medicamento antes de adicionar à receita.');return;}
+      if(!safety || safety.drug!==rx.name || !safety.canRelease){e.preventDefault();e.stopImmediatePropagation();window.DT_UI?.notify?.('Complete e confirme a triagem do medicamento antes de adicionar à receita.');return;}
       e.preventDefault();e.stopImmediatePropagation();add(rx);
     }
   },true);
@@ -100,5 +100,5 @@
   });
   mo.observe(document.body,{childList:true,subtree:true});
   ensureButton();ensureDialog();updateBadge();
-  window.DT_PRESCRIPTION_CART={addById(id){const rx=prescriptions().find(x=>x.id===id);const s=window.DT_RX_SAFETY_LAST;if(rx&&s?.drug===rx.name&&s.canRelease){add(rx);return true;}window.DT_UI?.toast?.('Abra o medicamento e conclua a triagem antes de adicionar.');return false;},open,clear,get:load};
+  window.DT_PRESCRIPTION_CART={addById(id){const rx=prescriptions().find(x=>x.id===id);const s=window.DT_RX_SAFETY_LAST;if(rx&&s?.drug===rx.name&&s.canRelease){add(rx);return true;}window.DT_UI?.notify?.('Abra o medicamento e conclua a triagem antes de adicionar.');return false;},open,clear,get:load};
 })();
