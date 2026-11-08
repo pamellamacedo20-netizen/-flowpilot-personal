@@ -11,6 +11,10 @@
     const safetyMap=window.DT_DRUG_SAFETY_MATRIX?.rules||{};
     const covered=meds.filter(x=>Object.prototype.hasOwnProperty.call(safetyMap,x.id)||window.DT_RX_SPECIFIC_IDS?.includes(x.id));
     push('Matriz complementar de segurança',Object.keys(safetyMap).length===41,`${Object.keys(safetyMap).length} monografias com precauções específicas adicionais`);
+    const registry=window.DT_EVIDENCE_REGISTRY?.diseases||{};
+    const pivots=window.DT_DECISION_PIVOTS||{};
+    push('Evidências de todas as doenças',diseases.every(x=>Array.isArray(registry[x.name])&&registry[x.name].length>0),`${diseases.filter(x=>Array.isArray(registry[x.name])&&registry[x.name].length>0).length}/${diseases.length} doenças`);
+    push('Pivôs para todas as doenças',diseases.every(x=>Array.isArray(pivots[x.name])&&pivots[x.name].length>0),`${diseases.filter(x=>Array.isArray(pivots[x.name])&&pivots[x.name].length>0).length}/${diseases.length} doenças`);
     push('Controle de exportação crítica da receita',!!window.DT_PRESCRIPTION_CART,'A liberação depende também da revisão do carrinho.');
     push('Carrinho de receita disponível',!!window.DT_PRESCRIPTION_CART,'DT_PRESCRIPTION_CART');
     push('Guia de procedimentos disponível',Array.isArray(window.DT_PROCEDURES)&&window.DT_PROCEDURES.length>0,`${window.DT_PROCEDURES?.length||0} procedimento(s)`);
