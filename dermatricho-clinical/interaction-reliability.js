@@ -46,7 +46,8 @@
     if(locked){e.preventDefault();e.stopImmediatePropagation();const last=window.DT_RX_SAFETY_LAST;const msg=last?.status==='PRESCRIÇÃO BLOQUEADA'?'A prescrição está bloqueada pela triagem de segurança.':'Complete/revise a triagem de segurança antes de adicionar à receita.';notify(msg,'warning',3400);focusSafety();return;}
     const copyAnvisa=e.target.closest('[data-copy-anvisa-term]');
     if(copyAnvisa){e.preventDefault();e.stopImmediatePropagation();copyText(copyAnvisa.dataset.copyAnvisaTerm||'','Nome copiado para buscar na ANVISA.');return;}
-    if(e.target.closest('[data-copy-rx-cart]')){e.preventDefault();e.stopImmediatePropagation();copyText(cartText(),'Receita copiada.');return;}
+    // A cópia de receita é responsabilidade exclusiva de prescription-builder.js,
+    // que valida interações e bloqueios ANTES de copiar. Não interceptar aqui.
     if(e.target.closest('[data-tuss]')){e.preventDefault();e.stopImmediatePropagation();openExternal('https://www.gov.br/ans/pt-br/assuntos/prestadores/padrao-para-troca-de-informacao-de-saude-suplementar-2013-tiss/codigos-da-tuss');return;}
     if(e.target.closest('[data-sigtap]')){e.preventDefault();e.stopImmediatePropagation();openExternal('http://sigtap.datasus.gov.br');return;}
   },true);
