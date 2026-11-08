@@ -31,13 +31,21 @@
     if(document.querySelector('.nav-btn.active')?.dataset.view!=='prescriptions')return;
     const drug=currentDrug();if(!drug)return;
     const anchor=panel.querySelector('.rx-safety-gate')||panel.querySelector('.integration-actions');if(!anchor)return;
-    const old=panel.querySelector('.ddi-critical-layer');old?.remove();
-    const meds=profileMeds();const hits=evaluate(drug,meds);
+    const meds=panel.querySelector('[data-rx-profile="meds"]')?.value ?? profileMeds();
+    const signature=JSON.stringify([drug,meds,rules.length]);
+    const old=panel.querySelector('.ddi-critical-layer');
+    if(old?.dataset.ddiSignature===signature)return;
+    old?.remove();
+    const hits=evaluate(drug,meds);
     const d=document.createElement('details');d.className='clinical-accordion ddi-critical-layer';
+    d.dataset.ddiSignature=signature;
     d.innerHTML=`<summary><span>Interações críticas estruturadas</span><span class="summary-right"><span class="accordion-badge">DDI</span><span class="chevron">⌄</span></span></summary><div class="accordion-body"><p class="microcopy">Camada dirigida a interações de alto valor em Dermatologia/Tricologia. Complementa, mas não substitui, uma base DDI comercial completa nem a bula brasileira vigente.</p>${meds?`<div class="ddi-context"><span class="overview-label">Medicações informadas</span><p>${esc(meds)}</p></div>`:'<div class="rx-alert rx-caution"><b>CAUTELA</b><span>Medicações concomitantes ainda não foram informadas na triagem.</span></div>'}${hits.length?hits.map(h=>`<div class="ddi-hit ddi-${N(h.level)}"><div><b>${esc(h.level)}</b><strong>${esc(h.mechanism)}</strong></div><p>${esc(h.action)}</p><small>${esc(h.source)}</small></div>`).join(''):'<div class="ddi-clear">Nenhuma interação crítica programada foi identificada com o texto informado. Isso não significa ausência de interação.</div>'}</div>`;
     anchor.insertAdjacentElement('afterend',d);
   }
   let q=false;const queue=()=>{if(q)return;q=true;requestAnimationFrame(()=>{q=false;inject();});};
-  new MutationObserver(queue).observe(panel,{childList:true,subtree:true});window.addEventListener('storage',queue);queue();
+  new MutationObserver(queue).observe(panel,{childList:true,subtree:true});
+  panel.addEventListener('input',e=>{if(e.target.matches('[data-rx-profile="meds"]'))queue();});
+  panel.addEventListener('change',e=>{if(e.target.matches('[data-rx-profile="meds"]'))queue();});
+  window.addEventListener('storage',queue);queue();
   window.DT_DDI_CRITICAL={rules,evaluate};
 })();
