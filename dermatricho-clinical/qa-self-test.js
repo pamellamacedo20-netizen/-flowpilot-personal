@@ -11,6 +11,8 @@
     push('Carrinho de receita disponível',!!window.DT_PRESCRIPTION_CART,'DT_PRESCRIPTION_CART');
     push('Guia de procedimentos disponível',Array.isArray(window.DT_PROCEDURES)&&window.DT_PROCEDURES.length>0,`${window.DT_PROCEDURES?.length||0} procedimento(s)`);
     push('Registro de evidências disponível',!!window.DT_EVIDENCE_REGISTRY,'DT_EVIDENCE_REGISTRY');
+    const expanded=window.DT_EXPANDED_TREATMENT_PROTOCOLS||{};
+    push('Protocolos por cenário das novas doenças',Object.keys(expanded).length===25,`${Object.keys(expanded).length}/25 protocolos com primeira linha, escalonamento e segurança`);
     push('Pivôs de decisão disponíveis',!!window.DT_DECISION_PIVOTS,`${Object.keys(window.DT_DECISION_PIVOTS||{}).length} doença(s) com pivôs`);
     push('Módulo de exposições especiais disponível',!!window.DT_SPECIAL_EXPOSURES,`${Object.keys(window.DT_SPECIAL_EXPOSURES||{}).length} contexto(s)`);
     push('Sem IDs duplicados',duplicateIds().length===0,duplicateIds().join(', ')||'nenhum');
