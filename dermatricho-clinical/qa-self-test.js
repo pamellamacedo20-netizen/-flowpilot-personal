@@ -8,6 +8,10 @@
     const diseases=window.DERMA_TRICHO_DATA||[];const meds=window.DERMA_TRICHO_PRESCRIPTIONS||[];
     push('Catálogo de doenças carregado',diseases.length>=50,`${diseases.length} doença(s)`);
     push('Guia de prescrição carregado',meds.length>=30,`${meds.length} medicamento(s)`);
+    const safetyMap=window.DT_DRUG_SAFETY_MATRIX?.rules||{};
+    const covered=meds.filter(x=>Object.prototype.hasOwnProperty.call(safetyMap,x.id)||window.DT_RX_SPECIFIC_IDS?.includes(x.id));
+    push('Matriz complementar de segurança',Object.keys(safetyMap).length===41,`${Object.keys(safetyMap).length} monografias com precauções específicas adicionais`);
+    push('Controle de exportação crítica da receita',!!window.DT_PRESCRIPTION_CART,'A liberação depende também da revisão do carrinho.');
     push('Carrinho de receita disponível',!!window.DT_PRESCRIPTION_CART,'DT_PRESCRIPTION_CART');
     push('Guia de procedimentos disponível',Array.isArray(window.DT_PROCEDURES)&&window.DT_PROCEDURES.length>0,`${window.DT_PROCEDURES?.length||0} procedimento(s)`);
     push('Registro de evidências disponível',!!window.DT_EVIDENCE_REGISTRY,'DT_EVIDENCE_REGISTRY');
