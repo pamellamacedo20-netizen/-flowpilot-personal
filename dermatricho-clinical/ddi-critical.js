@@ -26,7 +26,7 @@
   ];
   function profileMeds(){try{return JSON.parse(localStorage.getItem('dt-rx-patient-profile-v1')||'{}').meds||''}catch{return ''}}
   function currentDrug(){return panel.querySelector('.detail-title')?.textContent?.trim()||''}
-  function evaluate(drug,meds){return rules.filter(r=>has(drug,r.drug)&&has(meds,r.with));}
+  function evaluate(drug,meds){return rules.filter(r=>(has(drug,r.drug)&&has(meds,r.with))||(has(drug,r.with)&&has(meds,r.drug)));}
   function inject(){
     if(document.querySelector('.nav-btn.active')?.dataset.view!=='prescriptions')return;
     const drug=currentDrug();if(!drug)return;
