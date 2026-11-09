@@ -19,10 +19,13 @@ async function check(name,fn) {
   try{await fn();results.push({name,ok:true});console.log('PASS',name);}
   catch(e){results.push({name,ok:false,error:String(e.stack||e)});console.error('FAIL',name,String(e.message||e));}
 }
-async function browse(name,query) {
+async function browse(name,query,exactTitle) {
   await page.locator('.nav-btn[data-view="'+name+'"]').click();
   await page.locator('#searchInput').fill(query);
-  await page.locator('.disease-list .disease-card').first().click();
+  const cards=page.locator('.disease-list .disease-card');
+  if(exactTitle) await cards.filter({has:page.getByText(exactTitle,{exact:true})}).first().click();
+  else await cards.first().click();
+  await page.waitForFunction(()=>document.body.classList.contains('consultorio-detail-mode'),undefined,{timeout:10000});
 }
 await page.goto(base,{waitUntil:'domcontentloaded'});
 await page.waitForFunction(()=>Array.isArray(window.DERMA_TRICHO_DATA)&&window.DERMA_TRICHO_DATA.length>=56&&!!window.DT_QA,{timeout:30000});
@@ -31,33 +34,33 @@ await check('initial catalogs and key modules',async()=>{
   assert.equal(data.d,56);assert(data.m>=71);assert(data.qa&&data.p);
 });
 await check('AFF trichology card and clinical flowchart',async()=>{
-  await browse('trichology','fibrosante frontal');
-  await page.waitForFunction(()=>document.querySelector('#detailPanel .detail-title')?.textContent?.includes('Alopecia fibrosante frontal'),{timeout:15000});
+  await browse('trichology','fibrosante frontal','Alopecia fibrosante frontal');
+  await page.waitForFunction(()=>document.querySelector('#detailPanel .detail-title')?.textContent?.includes('Alopecia fibrosante frontal'),undefined,{timeout:15000});
   assert(await page.locator('[data-dt-flowchart]').count()>0,'missing AFF flowchart');
   assert((await page.locator('#detailPanel').innerText()).includes('Conduta curada'));
 });
 await check('hanseniase has disease-specific expanded protocol',async()=>{
-  await browse('dermatology','Hanseníase');
-  await page.waitForFunction(()=>document.querySelector('[data-expanded-protocol]')?.getAttribute('data-expanded-protocol')==='Hanseníase',{timeout:15000});
-  assert((await page.locator('[data-expanded-protocol]').innerText()).includes('Conduta inicial'));
+  await browse('dermatology','Hanseníase','Hanseníase');
+  await page.waitForFunction(()=>document.querySelector('[data-expanded-protocol]')?.getAttribute('data-expanded-protocol')==='Hanseníase',undefined,{timeout:15000});
+  assert((await page.locator('[data-expanded-protocol]').textContent()).includes('Conduta inicial'));
 });
 await check('prescription gate and G6PD field',async()=>{
-  await browse('prescriptions','Dapsona sistêmica');
-  await page.waitForFunction(()=>document.querySelector('.rx-safety-gate'),{timeout:12000});
+  await browse('prescriptions','Dapsona sistêmica','Dapsona sistêmica');
+  await page.waitForFunction(()=>document.querySelector('.rx-safety-gate'),undefined,{timeout:12000});
   assert(await page.locator('[data-rx-profile="g6pd"]').count()>0);
   assert(await page.locator('[data-rx-profile="tb"]').count()>0);
 });
 await check('DDI refreshes on co-medication edit without DOM replacement loop',async()=>{
-  await browse('prescriptions','Isotretinoína');
-  await page.waitForFunction(()=>document.querySelector('.ddi-critical-layer'),{timeout:15000});
+  await browse('prescriptions','Isotretinoína','Isotretinoína');
+  await page.waitForFunction(()=>document.querySelector('.ddi-critical-layer'),undefined,{timeout:15000});
   await page.locator('[data-rx-profile="meds"]').fill('doxiciclina');
-  await page.waitForFunction(()=>document.querySelector('.ddi-critical-layer')?.textContent?.includes('hipertensão intracraniana'),{timeout:12000});
+  await page.waitForFunction(()=>document.querySelector('.ddi-critical-layer')?.textContent?.includes('hipertensão intracraniana'),undefined,{timeout:12000});
   const probe=await page.evaluate(()=>{let el=document.querySelector('.ddi-critical-layer');el.dataset.smokeProbe='keep';return !!el});
   assert(probe);
   await page.waitForTimeout(600);
   assert.equal(await page.locator('[data-smoke-probe="keep"]').count(),1,'DDI layer was repeatedly recreated without clinical changes');
   await page.locator('[data-rx-profile="meds"]').fill('');
-  await page.waitForFunction(()=>!document.querySelector('.ddi-critical-layer')?.textContent?.includes('hipertensão intracraniana'),{timeout:15000});
+  await page.waitForFunction(()=>!document.querySelector('.ddi-critical-layer')?.textContent?.includes('hipertensão intracraniana'),undefined,{timeout:15000});
 });
 await check('unsafe recipe copy never reaches clipboard handler',async()=>{
   await page.evaluate(()=>{
@@ -74,8 +77,8 @@ await check('unsafe recipe copy never reaches clipboard handler',async()=>{
 });
 await check('mobile navigation and medical detail',async()=>{
   await page.setViewportSize({width:390,height:844});
-  await browse('dermatology','acne');
-  await page.waitForFunction(()=>document.querySelector('#detailPanel .detail-title')?.textContent?.includes('Acne'),{timeout:10000});
+  await browse('dermatology','acne','Acne vulgar');
+  await page.waitForFunction(()=>document.querySelector('#detailPanel .detail-title')?.textContent?.includes('Acne'),undefined,{timeout:10000});
   assert(await page.locator('#detailPanel .detail-title').isVisible());
 });
 await check('no missing JS/CSS or synchronous script errors',async()=>{
