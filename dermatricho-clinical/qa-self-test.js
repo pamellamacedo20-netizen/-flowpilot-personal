@@ -15,7 +15,11 @@
     const pivots=window.DT_DECISION_PIVOTS||{};
     push('Evidências de todas as doenças',diseases.every(x=>Array.isArray(registry[x.name])&&registry[x.name].length>0),`${diseases.filter(x=>Array.isArray(registry[x.name])&&registry[x.name].length>0).length}/${diseases.length} doenças`);
     push('Pivôs para todas as doenças',diseases.every(x=>Array.isArray(pivots[x.name])&&pivots[x.name].length>0),`${diseases.filter(x=>Array.isArray(pivots[x.name])&&pivots[x.name].length>0).length}/${diseases.length} doenças`);
-    push('Controle de exportação crítica da receita',!!window.DT_PRESCRIPTION_CART,'A liberação depende também da revisão do carrinho.');
+    push('Controle efetivo de exportação crítica',typeof window.DT_PRESCRIPTION_CART?.audit==='function','O carrinho expõe validação antes de copiar/imprimir.');
+    const inverseDDI=window.DT_DDI_CRITICAL?.evaluate?.('Doxiciclina','Isotretinoína')||[];
+    push('DDI bidirecional',inverseDDI.some(x=>x.level==='BLOQUEIO'),'Checa isotretinoína e tetraciclina independentemente da ordem.');
+    const regulations=window.DT_REGULATORY_NOTES;
+    push('Regras brasileiras de receita especial',!!regulations?.cases?.['rx-isotretinoin']&&!!regulations?.cases?.['rx-acitretin'],'SNCR/retinoides e PQT-U destacados, sem alegar registro ativo por produto.');
     push('Carrinho de receita disponível',!!window.DT_PRESCRIPTION_CART,'DT_PRESCRIPTION_CART');
     push('Guia de procedimentos disponível',Array.isArray(window.DT_PROCEDURES)&&window.DT_PROCEDURES.length>0,`${window.DT_PROCEDURES?.length||0} procedimento(s)`);
     push('Registro de evidências disponível',!!window.DT_EVIDENCE_REGISTRY,'DT_EVIDENCE_REGISTRY');
