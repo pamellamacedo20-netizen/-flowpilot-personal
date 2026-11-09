@@ -15,7 +15,7 @@
     const presentations=Array.isArray(item?.presentations)?item.presentations:[];
     box.innerHTML=`<div class="anvisa-copy"><span class="overview-label">Referência regulatória Brasil</span><strong>Bula profissional e registro ANVISA</strong><small>As apresentações abaixo vêm do cadastro clínico do app. Só considerar uma apresentação como disponível/regularizada no Brasil após conferir o registro ativo e a bula profissional vigente na Anvisa.</small>${presentations.length?`<div class="anvisa-presentations"><b>Apresentações cadastradas</b><ul>${presentations.map(x=>`<li>${esc(x)}</li>`).join('')}</ul></div>`:''}</div><div class="anvisa-actions"><button type="button" data-copy-anvisa-term="${esc(title)}">Copiar nome para busca</button><a href="${BULARIO}" target="_blank" rel="noopener">Abrir Bulário ANVISA</a><a href="${CONSULTA}" target="_blank" rel="noopener">Consultar registro</a></div>`;
   }
-  document.addEventListener('click',e=>{const b=e.target.closest('[data-copy-anvisa-term]');if(!b)return;navigator.clipboard?.writeText(b.dataset.copyAnvisaTerm||'');});
+  // Cópia centralizada na camada interaction-reliability.js, com fallback para Safari/iPad.
   let q=false;const queue=()=>{if(q)return;q=true;requestAnimationFrame(()=>{q=false;inject();});};
   new MutationObserver(queue).observe(panel,{childList:true,subtree:true});queue();
 })();
