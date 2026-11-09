@@ -1,0 +1,42 @@
+name: DermaTricho UI and safety smoke
+on:
+  push:
+    branches: [dermatricho-clinical]
+    paths:
+      - 'dermatricho-clinical/**'
+      - '.github/workflows/dermatricho-smoke.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Install isolated Playwright browser
+        run: |
+          npm install --prefix dermatricho-clinical --no-save --no-package-lock playwright
+          cd dermatricho-clinical
+          npx playwright install --with-deps chromium
+      - name: Start local web server
+        run: |
+          python3 -m http.server 8765 --directory dermatricho-clinical >/tmp/dt-smoke-server.log 2>&1 &
+          sleep 3
+          curl --fail --silent --show-error http://127.0.0.1:8765/index.html >/dev/null
+      - name: Check click flows, DDIs and prescription blocking
+        run: node dermatricho-clinical/tests/smoke.mjs
+        env:
+          DT_URL: http://127.0.0.1:8765/index.html?qa=1
+      - name: Upload browser screenshots and report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: dermatricho-smoke-results
+          path: dermatricho-clinical/tests/results/
+          if-no-files-found: ignore
