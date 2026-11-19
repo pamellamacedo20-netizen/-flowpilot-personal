@@ -1,0 +1,18 @@
+{
+  "workspaceId": "tea-dbikr24s728c73fjgm40",
+  "name": "graftmap-reconstruction-v2",
+  "repo": "https://github.com/pamellamacedo20-netizen/-flowpilot-personal",
+  "branch": "graftmap-reconstruction-v2",
+  "runtime": "docker",
+  "dockerContext": "reconstruction_v2",
+  "dockerfilePath": "reconstruction_v2/Dockerfile",
+  "plan": "1c-2g",
+  "region": "virginia",
+  "autoDeploy": "no",
+  "envVars": [
+    {"key":"GRAFTMAP_DATA","value":"/data"},
+    {"key":"GRAFTMAP_MAX_FILES","value":"48"},
+    {"key":"OMP_NUM_THREADS","value":"1"},
+    {"key":"OPENBLAS_NUM_THREADS","value":"1"}
+  ]
+}
